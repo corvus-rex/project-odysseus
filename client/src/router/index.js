@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
+import store from '../store/store'
 import Nav from '../components/Nav.vue'
 import Login from '../components/Login.vue'
 import Profile from '../components/Profile.vue'
@@ -57,7 +58,7 @@ const router = new VueRouter({
 
 router.beforeEach((to, from, next) => {
   if(to.matched.some(record => record.meta.requiresAuth)) {
-    if (localStorage.getItem('jwt') == null) {
+    if (!store.getters.isLoggedIn) {
       next({
         path: '/users/login',
         params: {nextUrl: to.fullPath}
@@ -68,7 +69,7 @@ router.beforeEach((to, from, next) => {
     }
   }
   else if (to.matched.some(record => record.meta.guest)) {
-    if(localStorage.getItem('jwt') == null) {
+    if(!store.getters.isLoggedIn) {
       next()
     }
     else {

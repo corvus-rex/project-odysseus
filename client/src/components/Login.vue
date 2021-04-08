@@ -30,7 +30,6 @@
 <script>
   import Nav from './Nav'
   import appName from '../appName'
-  import serverSide from '../serverSide'
 
   export default {
     name: 'Login',
@@ -50,20 +49,12 @@
     methods: {
       handleLogin(e) {
         e.preventDefault();
-        var loginRoute = serverSide + 'user/login';
-        console.log(loginRoute)
+        let email = this.form.email
+        let password = this.form.password
         if (this.form.password.length > 0) {
-          console.log(this.form.email)
-          this.$http.post(loginRoute, {
-            email: this.form.email,
-            password: this.form.password
-          })
-          .then(response => {
-            localStorage.setItem('user', JSON.stringify(response.data.user))
-            localStorage.setItem('jwt', response.data.token)
-            console.log(localStorage.getItem('jwt'))
-            if (localStorage.getItem('jwt') != null) {
-              this.$emit('loggedIn')
+          this.$store.dispatch('login', {email, password})
+          .then(() => {
+            if (this.$store.getters.isLoggedIn) {
               if (this.$route.params.nextUrl != null) {
                 this.$router.push(this.$route.params.nextUrl)
               }
