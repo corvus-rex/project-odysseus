@@ -3,6 +3,7 @@ import VueRouter from 'vue-router'
 import store from '../store/store'
 import Nav from '../components/Nav.vue'
 import Login from '../components/Login.vue'
+import Signup from '../components/Signup.vue'
 import Profile from '../components/Profile.vue'
 import appName from '../appName'
 
@@ -20,6 +21,18 @@ const routes = [
     name: 'login',
     components: {
       default: Login,
+      nav: Nav
+    },
+    props: {appName: appName},
+    meta: {
+      guest: true
+    }
+  },
+  {
+    path: '/users/signup',
+    name: 'signup',
+    components: {
+      default: Signup,
       nav: Nav
     },
     props: {appName: appName},

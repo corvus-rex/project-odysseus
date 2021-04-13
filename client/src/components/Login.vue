@@ -22,6 +22,12 @@
           <b-button variant="primary" type="submit" @click="handleLogin">Login</b-button>
         </div>
       </b-form>
+      <p class="comment text-right">Don't have an account? Click 
+        <router-link :to="{name: 'signup'}">
+          here
+        </router-link>
+        to join!
+      </p>
     </b-card>
   </div>
   <!-- Material form login -->
@@ -71,3 +77,18 @@
     }
   }
 </script>
+
+<style scoped>
+  .comment,
+  .comment a {
+    text-align: right;
+    font-size: 13px;
+    padding-top: 10px;
+    color: #7a7a7a;
+    margin: 0;
+  }
+
+  .comment a {
+    color: #2554FF;
+  }
+</style>
