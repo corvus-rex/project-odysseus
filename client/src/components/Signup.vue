@@ -4,14 +4,16 @@
     <Nav :appName= "appName" />
     <b-card style="max-width: 40rem;" v-if="show" title="Signup" class="mt-5">
       <b-form @submit.stop.prevent="onSubmit">
-        <b-form-input
-          id="username-input"
-          v-model="form.username"
-          required
-          placeholder="Enter your new username"
-          class="mt-3"
-        ></b-form-input>
-        <b-form-group label="Email" label-for="email">
+        <b-form-group label="Username" label-for="username-input">
+          <b-form-input
+            id="username-input"
+            v-model="form.username"
+            required
+            placeholder="Enter your new username"
+            class="mt-3"
+          ></b-form-input>
+        </b-form-group>
+        <b-form-group label="Email" label-for="email-input">
           <b-form-input
             id="email-input"
             name="email"
@@ -25,28 +27,34 @@
           ></b-form-input>
           <b-form-invalid-feedback id="error-email">{{veeErrors.first('email')}}</b-form-invalid-feedback>
         </b-form-group>
-        <b-form-input
-          id="firstName-input"
-          v-model="form.firstName"
-          required
-          placeholder="Enter your first name"
-          class="mt-3"
-        ></b-form-input>
-        <b-form-input
-          id="lastName-input"
-          v-model="form.lastName"
-          required
-          placeholder="Enter your last name"
-          class="mt-3"
-        ></b-form-input>
-        <b-form-input
-          id="publicKey-input"
-          v-model="form.publicKey"
-          required
-          placeholder="Enter your blockchain public key"
-          class="mt-3"
-        ></b-form-input>
-        <b-form-group>
+        <b-form-group label="First Name" label-for="firstName-input">
+          <b-form-input
+            id="firstName-input"
+            v-model="form.firstName"
+            required
+            placeholder="Enter your first name"
+            class="mt-3"
+          ></b-form-input>
+        </b-form-group>
+        <b-form-group label="Last Name" label-for="lastName-input">
+          <b-form-input
+            id="lastName-input"
+            v-model="form.lastName"
+            required
+            placeholder="Enter your last name"
+            class="mt-3"
+          ></b-form-input>
+        </b-form-group>
+        <b-form-group label="Public Key" label-for="publicKey-input">
+          <b-form-input
+            id="publicKey-input"
+            v-model="form.publicKey"
+            required
+            placeholder="Enter your blockchain public key"
+            class="mt-3"
+          ></b-form-input>
+        </b-form-group>
+        <b-form-group label="Password" label-for="password-input">
           <b-form-input
             id="password-input"
             ref="password"
@@ -61,7 +69,7 @@
           ></b-form-input>
           <b-form-invalid-feedback>{{veeErrors.first('password')}}</b-form-invalid-feedback>
         </b-form-group>
-        <b-form-group>
+        <b-form-group label="Confirm your password" label-for="confpassword-input">
           <b-form-input
             id="confpassword-input"
             v-model="form.confirmPassword"

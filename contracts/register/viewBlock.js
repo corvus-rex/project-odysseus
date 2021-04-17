@@ -1,6 +1,6 @@
 const Web3 = require('web3')
 const abiDecoder = require('abi-decoder');
-const abi = require('./abi_ballot.json')
+const abi = require('./abi_register.json')
 
 const web3 = new Web3('http://127.0.0.1:7545');
 
