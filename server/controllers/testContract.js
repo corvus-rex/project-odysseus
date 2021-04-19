@@ -5,7 +5,7 @@ const require = createRequire(import.meta.url); // construct the require method
 const registrationABI = require("../../contracts/register/abi_register.json")
 const registrationReceipt = require('../../contracts/register/receipt_register.json')
 
-export function registerUser(email, publicKey) {
+function registerUser(email, publicKey) {
      
     var abi = registrationABI
     var receipt = registrationReceipt
@@ -26,3 +26,5 @@ export function registerUser(email, publicKey) {
     })
     
 }
+
+registerUser('adrianovdex@gmail.co', '0x56BE696748bC54eade182720531E82D3730957bC')

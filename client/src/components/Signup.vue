@@ -132,8 +132,30 @@
         }
         return null;
       },
-      handleSignup() {
-
+      handleSignup(e) {
+        e.preventDefault();
+        let username = this.form.username
+        let email = this.form.email
+        let password = this.form.password
+        let firstName = this.form.firstName
+        let lastName = this.form.lastName
+        let publicKey = this.form.publicKey
+        if (this.form.password.length > 0) {
+          this.$store.dispatch('signup', {username, email, password, publicKey, firstName, lastName})
+          .then(() => {
+            if (this.$store.getters.isLoggedIn) {
+              if (this.$route.params.nextUrl != null) {
+                this.$router.push(this.$route.params.nextUrl)
+              }
+              else {
+                this.$router.push('profile')
+              }
+            }
+          })
+          .catch(function (error) {
+            console.error(error.response);
+          });
+        }
       }
     }
 }

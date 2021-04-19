@@ -2,6 +2,7 @@ import {validationResult} from 'express-validator';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import {User} from '../models/users.js';
+import {registerUser} from './callContract.js';
 
 export const signup = async (req,res) => {
     const errors = validationResult(req);
@@ -9,7 +10,7 @@ export const signup = async (req,res) => {
     if (!errors.isEmpty()) {
         return res.status(400).json({errors: errors.array()});
     };
-    const {username, email, password, firstName, lastName} = req.body;
+    const {username, email, password, publicKey, firstName, lastName} = req.body;
     try {
         let user = await User.findOne({email});
         if (user) {
@@ -20,7 +21,14 @@ export const signup = async (req,res) => {
             return res.status(400).json({msg: "User with same username already exist"});
         };
 
-        user = new User({username, email, password, firstName, lastName});
+        user = new User({
+            username: username,
+            email: email,
+            password: password,
+            firstName: firstName,
+            lastName: lastName,
+            publicKey: publicKey
+        });
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(password, salt);
         await user.save();
@@ -35,7 +43,10 @@ export const signup = async (req,res) => {
                 expiresIn: 10000
             },
             (err, token) => {
+                console.log('error')
                 if (err) throw err;
+                console.log('checked')
+                registerUser(email, publicKey);
                 res.status(200).send({auth: true, user: user, token: token});
             }
         );
