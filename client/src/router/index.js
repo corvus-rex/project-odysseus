@@ -2,9 +2,9 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import store from '../store/store'
 import Nav from '../components/Nav.vue'
-import Login from '../components/Login.vue'
-import Signup from '../components/Signup.vue'
-import Profile from '../components/Profile.vue'
+import Login from '../views/Login.vue'
+import Signup from '../views/Signup.vue'
+import Profile from '../views/Profile.vue'
 import appName from '../appName'
 
 Vue.use(VueRouter)

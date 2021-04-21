@@ -2,7 +2,7 @@
   <!-- Material form login -->
   <div>
     <Nav :appName= "appName" />
-    <b-card style="max-width: 40rem;" v-if="show" title="Signup" class="mt-5">
+    <b-card style="max-width: 40rem;" v-if="show" title="Signup" class="mt-5 ml-4">
       <b-form @submit.stop.prevent="onSubmit">
         <b-form-group label="Username" label-for="username-input">
           <b-form-input
@@ -50,11 +50,15 @@
             id="publicKey-input"
             v-model="form.publicKey"
             required
+            style="max-width: 23rem; display: inline-block"
             placeholder="Get your wallet public address from metamask"
             class="mt-3"
             readonly
           ></b-form-input>
-          <b-button class="app_action" @click="detectWallet">Detect Metamask</b-button>
+          <b-button class="app_action ml-2 mt-3" @click="detectWallet" 
+          style="display: inline-block; vertical-align: top">
+            Detect Metamask
+          </b-button>
         </b-form-group>
         <b-form-group label="Password" label-for="password-input">
           <b-form-input
@@ -101,7 +105,7 @@
 </template>
 
 <script>
-  import Nav from './Nav'
+  import Nav from '../components/Nav'
   import appName from '../appName'
   // import detectEthereumProvider from '@metamask/detect-provider';
 

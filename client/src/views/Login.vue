@@ -2,7 +2,7 @@
   <!-- Material form login -->
   <div>
     <Nav :appName= "appName" />
-    <b-card style="max-width: 40rem;" v-if="show" title="Log In" class="mt-5">
+    <b-card style="max-width: 40rem;" v-if="show" title="Log In" class="mt-5 ml-4">
       <b-form>
         <b-form-input
           id="username-input"
@@ -24,9 +24,8 @@
       </b-form>
       <p class="comment text-right">Don't have an account? Click 
         <router-link :to="{name: 'signup'}">
-          here
-        </router-link>
-        to join!
+          here</router-link>
+         to join!
       </p>
     </b-card>
   </div>
@@ -34,7 +33,7 @@
 </template>
 
 <script>
-  import Nav from './Nav'
+  import Nav from '../components/Nav'
   import appName from '../appName'
 
   export default {
