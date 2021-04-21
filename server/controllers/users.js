@@ -43,9 +43,7 @@ export const signup = async (req,res) => {
                 expiresIn: 10000
             },
             (err, token) => {
-                console.log('error')
                 if (err) throw err;
-                console.log('checked')
                 registerUser(email, publicKey);
                 res.status(200).send({auth: true, user: user, token: token});
             }

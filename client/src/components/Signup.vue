@@ -50,9 +50,11 @@
             id="publicKey-input"
             v-model="form.publicKey"
             required
-            placeholder="Enter your blockchain public key"
+            placeholder="Get your wallet public address from metamask"
             class="mt-3"
+            readonly
           ></b-form-input>
+          <b-button class="app_action" @click="detectWallet">Detect Metamask</b-button>
         </b-form-group>
         <b-form-group label="Password" label-for="password-input">
           <b-form-input
@@ -101,6 +103,7 @@
 <script>
   import Nav from './Nav'
   import appName from '../appName'
+  // import detectEthereumProvider from '@metamask/detect-provider';
 
   export default {
     name: 'Signup',
@@ -156,6 +159,27 @@
             console.error(error.response);
           });
         }
+      },
+      detectWallet() {
+        if (typeof window.ethereum !== 'undefined') {
+          window.ethereum.request({ method: 'eth_requestAccounts' });
+        }
+        else {
+          alert('Please install MetaMask!')
+        }
+        window.ethereum.request({method: 'eth_accounts'})
+        .then(this.handleAccountsChanged)
+        .catch((err) => console.log(err))
+        window.ethereum.on('accountsChanged', this.handleAccountsChanged);
+      },
+      handleAccountsChanged() {
+        var ethereum = window.ethereum
+        if (!ethereum.selectedAddress) {
+          // MetaMask is locked or the user has not connected any accounts
+        } else if (ethereum.selectedAddress !== this.form.publicKey) {
+          this.form.publicKey = ethereum.selectedAddress;
+          console.log(this.form.publicKey)
+        }
       }
     }
 }
@@ -169,6 +193,10 @@
     padding-top: 10px;
     color: #7a7a7a;
     margin: 0;
+  }
+
+  .app_action {
+    background: #eba434
   }
 
   .comment a {
