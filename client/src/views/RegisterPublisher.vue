@@ -6,7 +6,7 @@
         <b-form-group label="Publisher Name" label-for="name-input">
           <b-form-input
             id="name-input"
-            v-model="form.name"
+            v-model="pubName"
             required
             placeholder="Enter the new publisher name"
             class="mt-3"
@@ -17,7 +17,7 @@
              id="logo-input"
              type="file" 
              accept="image/*" 
-             @change="uploadImage($event)">
+             @change="uploadImage">
         </b-form-group>
         <div class="mt-2">
           <b-button variant="primary" type="submit" @click="handleRegister">Register</b-button>
@@ -35,11 +35,9 @@ export default {
     data: () => {
         return {
             appName: appName,
-            form: {
-                userID: String,
-                pubName: String,
-                publicKey: String
-            },
+            userID: '',
+            pubName: '',
+            publicKey: '',
             logo_data: null
         }
     },
@@ -52,7 +50,7 @@ export default {
         },
         handleRegister() {
             this.$store.dispatch('registerPublisher', 
-            {name: this.form.name, chiefOfficer: this.form.userID, logo: this.logo_data})
+            {name: this.pubName, chiefOfficer: this.userID, logo: this.logo_data})
             .then(() => {
                 if (this.$route.params.nextUrl != null) {
                     this.$router.push(this.$route.params.nextUrl)
@@ -66,11 +64,11 @@ export default {
             });
         }
     },
-    created: () => {
+    created: function() {
         var user = localStorage.getItem('user')
         var userParsed = JSON.parse(user)
-        this.form.userID = userParsed._id
-        this.form.publicKey = userParsed.publicKey
+        this.userID = userParsed._id
+        this.publicKey = userParsed.publicKey
     }
 }
 </script>
