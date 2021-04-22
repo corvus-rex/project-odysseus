@@ -15,12 +15,21 @@ export default new Vuex.Store({
     auth_request(state){
       state.status = 'loading'
     },
+    register_request(state){
+      state.status = 'loading'
+    },
     auth_success(state, token, user){
       state.status = 'success'
       state.token = token
       state.user = user
     },
+    register_success(state){
+      state.status = 'success'
+    },
     auth_error(state){
+      state.status = 'error'
+    },
+    register_error(state){
       state.status = 'error'
     },
     logout(state){
@@ -66,6 +75,23 @@ export default new Vuex.Store({
         }).catch(err => {
           commit('auth_error')
           localStorage.removeItem('token')
+          reject(err)
+        })
+      })
+    },
+    registerPublisher({commit}, data){
+      return new Promise((resolve, reject) => {
+        commit('register_request')
+        var formData = new FormData()
+        formData.append('name', data.name)
+        formData.append('logo', data.logo, data.logo.name)
+        formData.append('chiefOfficer', data.chiefOfficer)
+        axios.post(serverSide.registerPublisher, formData)
+        .then(resp => {
+          commit('register_success')
+          resolve(resp)
+        }).catch(err => {
+          commit('register_error')
           reject(err)
         })
       })

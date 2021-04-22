@@ -52,7 +52,10 @@
                     </b-form-group>
                 </b-card>
                 <b-card style="width: 30rem;" v-if="publishing" title="Register as New Publisher" class="mt-3 ml-1">
-                    <b-button id="register-pub" variant="primary"> Register a New Publication </b-button>
+                    <router-link :to="{name: 'new-publisher'}">
+                        <b-button id="register-pub" 
+                        variant="primary"> Register a New Publication </b-button>
+                    </router-link>
                 </b-card>
             </div>
         </div>
