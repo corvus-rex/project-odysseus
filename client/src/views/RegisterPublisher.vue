@@ -42,6 +42,7 @@ import Nav from '../components/Nav'
 import appName from '../appName'
 import serverSide from '../serverSide'
 import axios from 'axios'
+import {registerPublisher} from '../contracts/callContract'
 
 export default {
     name: 'RegisterPublisher',
@@ -63,6 +64,14 @@ export default {
             this.logo_data = event.target.files[0]
         },
         handleRegister() {
+            if (typeof window.ethereum !== 'undefined') {
+              window.ethereum.request({ method: 'eth_requestAccounts' });
+            }
+            else {
+              alert('Please install MetaMask!')
+            }
+            var address = window.ethereum.selectedAddress
+            registerPublisher(this.pubName, address)
             var formData = new FormData()
             formData.append('name', this.pubName)
             formData.append('logo', this.logo_data)
