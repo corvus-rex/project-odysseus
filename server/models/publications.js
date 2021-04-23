@@ -3,7 +3,10 @@ import mongoose from 'mongoose';
 const PublisherSchema = mongoose.Schema({
     name: String,
     logo: String,
-    createdAt: Date,
+    createdAt: {
+        type: Date,
+        default: Date.now()
+    },
     chiefOfficer: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'

@@ -8,10 +8,7 @@ app.use(express.json());
 
 router.post(
     '/new',
-    [
-        check('name', 'Please enter a valid publisher name')
-        .notEmpty()
-    ],
+    [],
     registerPublisher
 );
 

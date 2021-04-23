@@ -27,6 +27,10 @@ const UserSchema = mongoose.Schema({
         type: String,
         default: "None"
     },
+    hasPublisher: {
+        type: Boolean, 
+        default: false
+    },
     rep: {
         type: Number,
         default: 0

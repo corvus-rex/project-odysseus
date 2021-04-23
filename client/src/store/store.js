@@ -79,23 +79,6 @@ export default new Vuex.Store({
         })
       })
     },
-    registerPublisher({commit}, data){
-      return new Promise((resolve, reject) => {
-        commit('register_request')
-        var formData = new FormData()
-        formData.append('name', data.name)
-        formData.append('logo', data.logo, data.logo.name)
-        formData.append('chiefOfficer', data.chiefOfficer)
-        axios.post(serverSide.registerPublisher, formData)
-        .then(resp => {
-          commit('register_success')
-          resolve(resp)
-        }).catch(err => {
-          commit('register_error')
-          reject(err)
-        })
-      })
-    },
     logout({commit}){
         return new Promise((resolve) => {
           commit('logout')
