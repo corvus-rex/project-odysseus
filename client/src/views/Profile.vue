@@ -51,11 +51,14 @@
                         ></b-form-input>
                     </b-form-group>
                 </b-card>
-                <b-card style="width: 30rem;" v-if="publishing" title="Register as New Publisher" class="mt-3 ml-1">
+                <b-card style="width: 30rem;" v-if="publishing  && !hasPublisher" title="Register as New Publisher" class="mt-3 ml-1">
                     <router-link :to="{name: 'new-publisher'}">
                         <b-button id="register-pub" 
                         variant="primary"> Register a New Publication </b-button>
                     </router-link>
+                </b-card>
+                <b-card style="width: 30rem;" v-if="publishing && hasPublisher" title="Register as New Publisher" class="mt-3 ml-1">
+                    
                 </b-card>
             </div>
         </div>
@@ -79,7 +82,8 @@ export default {
             lastName: String,
             publicKey: String,
             profile: true,
-            publishing: false
+            publishing: false,
+            hasPublisher: false
         }
     },
     props: {
@@ -110,6 +114,7 @@ export default {
         this.firstName = userParsed.firstName
         this.lastName = userParsed.lastName
         this.publicKey = userParsed.publicKey
+        this.hasPublisher = userParsed.hasPublisher
     }
 }
 </script>
