@@ -38,7 +38,8 @@ export const registerPublisher = async (req, res) => {
             '_id': chiefOfficer
         }, 
         {
-            'hasPublisher': true
+            'hasPublisher': true,
+            'role': 'Officer'
         })
         let user = await User.findOne({'_id': chiefOfficer})
         publisher = new Publisher({
@@ -59,5 +60,31 @@ export const registerPublisher = async (req, res) => {
     catch (err) {
         console.log(err.message);
         res.status(500).send("Error in Saving");
+    }
+}
+
+export const getPublisher = async (req, res) => {
+    const errors = validationResult(req);
+    console.log(req.body)
+    if (!errors.isEmpty()) {
+        return res.status(400).json({errors: errors.array()});
+    };
+    try {
+        const userID = req.body.userID
+        const role = req.body.userRole
+        if (role == 'Officer') {
+            let publisher = await Publisher.findOne({'chiefOfficer': userID})
+            let chiefOfficer = await User.findOne({'_id': userID})
+            res.status(200).send({publisher: publisher, chiefOfficer: chiefOfficer})
+        }
+        else if (role == 'Author') {
+            let publisher = await Publisher.find({'authors': userID})
+            let chiefOfficer = await User.findOne({'_id': publisher.chiefOfficer})
+            res.status(200).send({publisher: publisher, chiefOfficer: chiefOfficer})
+        }
+    }
+    catch (err) {
+        console.log(err.message);
+        res.status(500).send("Error in Fetching");
     }
 }
