@@ -31,6 +31,7 @@ export const inviteAuthor = async (req, res) => {
         await notif.save()
         publisher.pendingAuthors.push(to)
         await publisher.save()
+        console.log(notif)
         res.status(200).send({notif: notif})
     }
     catch (err) {

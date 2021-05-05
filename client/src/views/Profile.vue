@@ -4,9 +4,9 @@
         <div>
             <b-list-group id="dash-nav" class="mt-3 ml-5">
                 <b-list-group-item :active="profile" 
-                @click="switchProfileDashboard"> User Profile </b-list-group-item>
+                @click="switchProfileDashboard" button> User Profile </b-list-group-item>
                 <b-list-group-item :active="publishing" 
-                @click="switchPubDashboard"> Publishing </b-list-group-item>
+                @click="switchPubDashboard" button> Publishing </b-list-group-item>
             </b-list-group>
             <div id="dashboard">
                 <b-card style="width: 30rem;" v-if="profile" :title="getUsername()" class="mt-3 ml-1">
@@ -61,11 +61,43 @@
                     <hr class="rounded">
                     <h4 class="panel-group">Rep Score: {{this.publisher.rep}}</h4>
                     <h4 class="panel-group">Chief Officer: @{{this.chiefOfficer.username}}</h4>
-                    <b-button id="invite-auth" 
-                    variant="primary"> Invite a New Author </b-button>
+                    <h4 class="panel-group">Authors: {{this.publisher.authors.length}}</h4>
+                    <h4 class="panel-group">Pending Authors: {{this.publisher.pendingAuthors.length}}</h4>
+                    <b-button v-b-modal.inviteauth-modal id="invite-auth" 
+                    variant="primary"> Invite New Authors </b-button>
+                    <b-list-group class="mt-3">
+                        <b-list-group-item v-for="email in authEmails" :key="email">
+                            <b-container>
+                                <b-row style="font-size: 1rem;">New Author Email</b-row>
+                                <b-row align-h="end">
+                                    <b-col style="display: inline-block; vertical-align: top"> {{ email }} </b-col>
+                                    <b-col style="display: inline-block; vertical-align: top">
+                                        <b-button variant="primary" 
+                                        @click="deleteEmail(authEmails.indexOf(email))">
+                                        Remove </b-button>
+                                    </b-col>
+                                </b-row>
+                            </b-container>
+                        </b-list-group-item>
+                    </b-list-group>
+                    <b-button v-if="authEmails.length != 0" 
+                    variant="primary" @click="inviteAuthors()">Invite</b-button>
                 </b-card>
             </div>
         </div>
+        <b-modal id="inviteauth-modal" 
+        :title="authModalTitle()" 
+        @show="resetModal" @hidden="resetModal" @ok="pushEmails">
+            <b-form-group label="Enter author's emails" label-for="auth-email-input">
+                <b-form-tags
+                    id="auth-email-input"
+                    v-model="authEmailsInput"
+                    separator=" ,;"
+                    placeholder="Enter email(s) to add..."
+                    class="mt-3"
+                ></b-form-tags>
+            </b-form-group>
+        </b-modal>
     </div>
 </template>
 
@@ -92,7 +124,9 @@ export default {
             publishing: false,
             hasPublisher: false,
             publisher: null,
-            chiefOfficer: null
+            chiefOfficer: null,
+            authEmailsInput: [],
+            authEmails: []
         }
     },
     props: {
@@ -106,6 +140,10 @@ export default {
         },
         publishingTitle() {
             return this.publisher.name + " Dashboard"
+        },
+        authModalTitle() {
+            if(this.publisher == null) {return null}
+            else {return "Invite new author to " + this.publisher.name}
         },
         switchProfileDashboard() {
             this.profile = true
@@ -122,6 +160,29 @@ export default {
                 this.chiefOfficer = res.data.chiefOfficer
                 console.log(this.publisher)
             })
+        },
+        resetModal() {
+            this.authEmailsInput = []
+        },
+        pushEmails() {
+            this.authEmailsInput.forEach(element => {
+                this.authEmails.push(element)
+            });
+            console.log(this.authEmails)
+        },
+        deleteEmail(index) {
+            this.authEmails.splice(index, 1)
+        },
+        inviteAuthors() {
+            let promises = []
+            this.authEmails.forEach(element => {
+                promises.push(
+                    axios.post(serverSide.inviteAuthors, 
+                    {userID: this.id, recipientEmail: element})
+                    .then(res => console.log(res.data))
+                )
+            })
+            Promise.all(promises).then(() => this.$router.go())
         }
     },
     computed: {

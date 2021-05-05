@@ -4,7 +4,8 @@ const serverSide = {
     login: url + 'user/login',
     signup: url + 'user/signup',
     registerPublisher: url + 'publisher/new',
-    getPublisher: url + 'publisher/'
+    getPublisher: url + 'publisher/',
+    inviteAuthors: url + 'notif/invite-auth'
 };
 
 export default serverSide;
