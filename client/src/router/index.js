@@ -6,6 +6,7 @@ import Login from '../views/Login.vue'
 import Signup from '../views/Signup.vue'
 import Profile from '../views/Profile.vue'
 import appName from '../appName'
+import RegisterPublisher from '../views/RegisterPublisher.vue'
 
 Vue.use(VueRouter)
 
@@ -41,15 +42,6 @@ const routes = [
     }
   },
   {
-    path: '/users/signup',
-    name: 'signup',
-    component: Nav,
-    props: {appName: appName},
-    meta: {
-      guest: true
-    }
-  },
-  {
     path: '/users/profile',
     name: 'profile',
     components: {
@@ -60,7 +52,19 @@ const routes = [
     meta: {
       requiresAuth: true
     }
-  }
+  },
+  {
+    path: '/publishers/new',
+    name: 'new-publisher',
+    components: {
+      default: RegisterPublisher,
+      nav: Nav
+    },
+    props: {appName: appName},
+    meta: {
+      requiresAuth: true
+    }
+  },
 ]
 
 const router = new VueRouter({

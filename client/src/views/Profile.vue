@@ -51,8 +51,18 @@
                         ></b-form-input>
                     </b-form-group>
                 </b-card>
-                <b-card style="width: 30rem;" v-if="publishing" title="Register as New Publisher" class="mt-3 ml-1">
-                    <b-button id="register-pub" variant="primary"> Register a New Publication </b-button>
+                <b-card style="width: 30rem;" v-if="publishing  && !hasPublisher" title="Register as New Publisher" class="mt-3 ml-1">
+                    <router-link :to="{name: 'new-publisher'}">
+                        <b-button id="register-pub" 
+                        variant="primary"> Register a New Publication </b-button>
+                    </router-link>
+                </b-card>
+                <b-card style="width: 30rem;" v-if="publishing && hasPublisher" :title="publishingTitle()" class="mt-3 ml-1">
+                    <hr class="rounded">
+                    <h4 class="panel-group">Rep Score: {{this.publisher.rep}}</h4>
+                    <h4 class="panel-group">Chief Officer: @{{this.chiefOfficer.username}}</h4>
+                    <b-button id="invite-auth" 
+                    variant="primary"> Invite a New Author </b-button>
                 </b-card>
             </div>
         </div>
@@ -60,9 +70,10 @@
 </template>
 
 <script>
-  import Nav from '../components/Nav'
-  import appName from '../appName'
-//   import serverSide from '../serverSide'
+import Nav from '../components/Nav'
+import appName from '../appName'
+import serverSide from '../serverSide'
+import axios from 'axios'
 
 export default {
     name: 'Profile',
@@ -70,13 +81,18 @@ export default {
         return {
             show: true,
             appName: appName,
+            id: String,
             username: String,
             email: String,
             firstName: String,
             lastName: String,
             publicKey: String,
+            role: String,
             profile: true,
-            publishing: false
+            publishing: false,
+            hasPublisher: false,
+            publisher: null,
+            chiefOfficer: null
         }
     },
     props: {
@@ -88,6 +104,9 @@ export default {
         getUsername() {
             return "Welcome back, " + this.username
         },
+        publishingTitle() {
+            return this.publisher.name + " Dashboard"
+        },
         switchProfileDashboard() {
             this.profile = true
             this.publishing = false
@@ -95,6 +114,14 @@ export default {
         switchPubDashboard() {
             this.profile = false
             this.publishing = true
+        },
+        getPublisher() {
+            axios.post(serverSide.getPublisher, {userID: this.id, userRole: this.role})
+            .then((res) => {
+                this.publisher = res.data.publisher
+                this.chiefOfficer = res.data.chiefOfficer
+                console.log(this.publisher)
+            })
         }
     },
     computed: {
@@ -102,11 +129,15 @@ export default {
     created: function() {
         var username = localStorage.getItem('user')
         var userParsed = JSON.parse(username)
+        this.id = userParsed._id
         this.username = userParsed.username
         this.email = userParsed.email
         this.firstName = userParsed.firstName
         this.lastName = userParsed.lastName
         this.publicKey = userParsed.publicKey
+        this.role = userParsed.role
+        this.hasPublisher = userParsed.hasPublisher
+        this.getPublisher()
     }
 }
 </script>
@@ -131,5 +162,14 @@ export default {
     .btn-primary {
         background-color: orange;
         border-color: orange;
+    }
+    .panel-group {
+        font-size: 1.2rem;
+    }
+    hr.rounded {
+        border-top: 3px solid #bbb;
+        margin-top: 1.5rem;
+        margin-bottom: 1.5rem;
+        border-radius: 5px;
     }
 </style>

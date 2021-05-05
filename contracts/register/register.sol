@@ -29,8 +29,8 @@ contract Registration {
         users[key].rep = 0;
     }
 
-    function registerPublisher(string memory name) public {
-        address _chiefOfficer = msg.sender;
+    function registerPublisher(string memory name) payable public {
+        address payable _chiefOfficer = payable(msg.sender);
         bytes memory nameByte = bytes(publishers[_chiefOfficer].name); // Uses memory
         require(nameByte.length == 0, "User already created a publication");
         authorAddr.push(msg.sender);
@@ -38,6 +38,7 @@ contract Registration {
         publishers[_chiefOfficer].rep = 0;
         publishers[_chiefOfficer].authors = authorAddr;
         delete authorAddr;
+        _chiefOfficer.transfer(msg.value);
     }
 
     function electAuthorship(address newAuthor) public {
