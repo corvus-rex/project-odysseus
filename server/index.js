@@ -5,6 +5,7 @@ import cors from "cors";
 import postRoutes from "./routes/posts.js";
 import userRoutes from "./routes/users.js";
 import publisherRoutes from "./routes/publications.js"
+import notifRoutes from "./routes/notifs.js";
 import {initiateServer, CONNECTION_URL} from './config/db.js';
 import multer from 'multer'
 
@@ -19,6 +20,7 @@ app.use(upload.any());
 app.use('/posts', postRoutes);
 app.use('/user', userRoutes);
 app.use('/publisher', publisherRoutes);
+app.use('/notif', notifRoutes);
 
 const PORT = process.env.PORT || 5000;
 initiateServer(PORT, CONNECTION_URL, app);
