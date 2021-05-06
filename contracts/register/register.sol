@@ -41,9 +41,8 @@ contract Registration {
         _chiefOfficer.transfer(msg.value);
     }
 
-    function electAuthorship(address newAuthor) public {
-        address _chiefOfficer = msg.sender;
-        publishers[_chiefOfficer].authors.push(newAuthor);
+    function electAuthorship(address chiefOfficer, address newAuthor) public {
+        publishers[chiefOfficer].authors.push(newAuthor);
         users[newAuthor].authorship = true;
     }
 

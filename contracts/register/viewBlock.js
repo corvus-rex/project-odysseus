@@ -4,7 +4,7 @@ const abi = require('./abi_register.json')
 
 const web3 = new Web3('http://127.0.0.1:7545');
 
-const transaction = '0x45a1bf88f56495554f383927f396f189e485e863528a708e73bb0a3c17e35c96'
+const transaction = '0x76c772a0a5768e9a17bea2d08bdd6e06e3494690ebbdb68afdda5e41021d93f7'
 web3.eth.getTransaction(transaction, function(err, tx){
     console.log(tx)
     abiDecoder.addABI(abi);

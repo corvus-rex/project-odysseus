@@ -5,7 +5,11 @@ const serverSide = {
     signup: url + 'user/signup',
     registerPublisher: url + 'publisher/new',
     getPublisher: url + 'publisher/',
-    inviteAuthors: url + 'notif/invite-auth'
+    findPublisherByID: url + 'publisher/findByID',
+    inviteAuthors: url + 'notif/invite-auth',
+    acceptAuthorship: url + 'publisher/accept-author',
+    getNotifs: url + 'notif/get-notifs',
+    changeNotifStatus: url + 'notif/change-status'
 };
 
 export default serverSide;

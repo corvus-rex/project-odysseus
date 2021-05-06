@@ -15,6 +15,7 @@ export const inviteAuthor = async (req, res) => {
     try {
         let sender = req.body.userID
         let toEmail = req.body.recipientEmail
+        let senderUser = await User.findByOne({'_id': sender})
         let toUser = await User.findOne({'email': toEmail})
         let to = toUser._id
         let publisher = await Publisher.findOne({'chiefOfficer': sender})
@@ -25,7 +26,12 @@ export const inviteAuthor = async (req, res) => {
             to: to,
             status: "unread",
             data: {
-                publisher: publisherID
+                publisher: publisherID,
+                title: "Invitation to Authorship from " + publisher.name,
+                message: "User @" + senderUser.username + 
+                " has sent an invitation for you to join " + publisher.name +
+                " as one of their authors! If this message is meant for you, please click 'Accept' " +
+                "to join as an author"
             }
         })
         await notif.save()
@@ -37,5 +43,42 @@ export const inviteAuthor = async (req, res) => {
     catch (err) {
         console.log(err.message);
         res.status(500).send("Error in Saving");
+    }
+}
+
+export const getUserNotifs = async (req, res) => {
+    const errors = validationResult(req);
+    console.log(req.body)
+    if (!errors.isEmpty()) {
+        return res.status(400).json({errors: errors.array()});
+    };
+    try {
+        let userID = req.body.userID
+        let notifs = await Notif.find({'to': userID, 'status': 'unread'})
+        console.log(notifs)
+        res.status(200).send({notifs: notifs})
+    }
+    catch (err) {
+        console.log(err.message);
+        res.status(500).send("Error in Fetching");
+    }
+}
+
+export const changeStatus = async (req, res) => {
+    const errors = validationResult(req);
+    console.log(req.body)
+    if (!errors.isEmpty()) {
+        return res.status(400).json({errors: errors.array()});
+    };
+    try{
+        let notifID = req.body.notifID
+        let status = req.body.status
+        let notif = await Notif.findOneAndUpdate({'_id': notifID}, {'status': status})
+        await notif.save()
+        res.status(200).send({notif: notif})
+    }
+    catch (err) {
+        console.log(err.message);
+        res.status(500).send("Error in Fetching");
     }
 }

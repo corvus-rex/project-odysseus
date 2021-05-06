@@ -26,3 +26,25 @@ export function registerUser(email, publicKey) {
     })
     
 }
+
+export function electAuthorship(chiefOfficer, newAuthor) {
+     
+    var abi = registrationABI
+    var receipt = registrationReceipt
+    var contractAddress = receipt.contractAddress
+    const web3 = new Web3(new Web3.providers.HttpProvider(networkURL.networkURL))
+    web3.eth.getAccounts().then((accounts) => {
+        var registrationContract = new web3.eth.Contract(abi, contractAddress, {
+            from: accounts[0]
+        })
+        if(!web3.utils.isAddress(newAuthor)){
+            console.log('invalid public address')
+        }
+        registrationContract.methods.electAuthorship(chiefOfficer, newAuthor).send({
+            from: accounts[0]
+        }).on('receipt', (receipt) => {
+            console.log(receipt)
+        })
+    })
+    
+}
