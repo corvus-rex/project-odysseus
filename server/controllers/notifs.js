@@ -15,7 +15,7 @@ export const inviteAuthor = async (req, res) => {
     try {
         let sender = req.body.userID
         let toEmail = req.body.recipientEmail
-        let senderUser = await User.findByOne({'_id': sender})
+        let senderUser = await User.findOne({'_id': sender})
         let toUser = await User.findOne({'email': toEmail})
         let to = toUser._id
         let publisher = await Publisher.findOne({'chiefOfficer': sender})

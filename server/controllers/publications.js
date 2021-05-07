@@ -132,6 +132,8 @@ export const acceptAuthorship = async (req, res) => {
         {'authors': publisherObj.authors, 'pendingAuthors': pendingAuthors})
         await user.save()
         await publisher.save()
+        user = await User.findOne({'_id': userID})
+        publisher = await Publisher.findOne({'_id': publisherID})
         electAuthorship(chiefOfficer.publicKey, newAuthor)
         res.status(200).send({publisher: publisher, user: user})
     }

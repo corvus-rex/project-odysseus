@@ -144,10 +144,13 @@ export default {
           const user = res.data.user
           const userJSON = JSON.stringify(user)
           console.log(userJSON)
-          localStorage.setItem('user', userJSON)
+          this.user = userJSON
         })
       )
-      Promise.all(promises).then(() => this.$router.go())
+      Promise.all(promises).then(() => {
+        this.$router.go()
+        localStorage.setItem("user", this.user)
+      })
     }
   },
   props: {
