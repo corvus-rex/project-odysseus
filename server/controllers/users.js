@@ -4,6 +4,23 @@ import jwt from 'jsonwebtoken';
 import {User} from '../models/users.js';
 import {registerUser} from './callContract.js';
 
+export const findByID = async (req,res) => {
+    const errors = validationResult(req);
+    console.log(req.body)
+    if (!errors.isEmpty()) {
+        return res.status(400).json({errors: errors.array()});
+    };
+    try{
+        let userID = req.body.userID
+        let user = await User.findOne({'_id': userID})
+        res.status(200).send({user: user})
+    }
+    catch (error) {
+        console.log(error.message);
+        res.status(500).send("Error in Fetching");
+    }
+}
+
 export const signup = async (req,res) => {
     const errors = validationResult(req);
     console.log(req.body)

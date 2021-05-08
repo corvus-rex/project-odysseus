@@ -61,7 +61,7 @@
                     <hr class="rounded">
                     <h4 class="panel-group">Rep Score: {{this.publisher.rep}}</h4>
                     <h4 class="panel-group">Chief Officer: @{{this.chiefOfficer.username}}</h4>
-                    <h4 class="panel-group">Authors: {{this.publisher.authors.length}}</h4>
+                    <h4 class="panel-group">Authors: <a href="#" @click="$bvModal.show('authors-modal')">{{this.publisher.authors.length}}</a></h4>
                     <h4 class="panel-group">Pending Authors: {{this.publisher.pendingAuthors.length}}</h4>
                     <b-button v-b-modal.inviteauth-modal id="invite-auth" 
                     variant="primary"> Invite New Authors </b-button>
@@ -98,6 +98,26 @@
                 ></b-form-tags>
             </b-form-group>
         </b-modal>
+        <b-modal id="authors-modal"
+        title="Authors">
+            <b-list-group>
+                <b-list-group-item v-for="author in authors" :key="author">
+                    <b-row>
+                        <b-col cols="9">
+                            <h4 class="author-title"> {{author.firstName + " " + author.lastName}} </h4>
+                            <p class="author-data"> Email: {{author.email}} </p>
+                            <p class="author-data"> Username: {{author.username}} </p>
+                            <p class="author-data"> Rep Score: {{author.rep}} </p>
+                        </b-col>
+                        <b-col>
+                            <b-button class="revoke-button" 
+                            variant="danger" 
+                            @click="revokeAuthor(author.id, author.publicKey, publisher._id)">Revoke Authorship</b-button>
+                        </b-col>
+                    </b-row>
+                </b-list-group-item>
+            </b-list-group>
+        </b-modal>
     </div>
 </template>
 
@@ -123,7 +143,8 @@ export default {
             profile: true,
             publishing: false,
             hasPublisher: false,
-            publisher: null,
+            publisher: {},
+            authors: [],
             chiefOfficer: null,
             authEmailsInput: [],
             authEmails: []
@@ -159,7 +180,36 @@ export default {
                 this.publisher = res.data.publisher
                 this.chiefOfficer = res.data.chiefOfficer
                 console.log(this.publisher)
+                this.getAuthorsData()
             })
+        },
+        getAuthorsData() {
+            let promises = []
+            console.log(this.publisher.authors)
+            this.publisher.authors.forEach(userID => {
+                promises.push(
+                    axios.post(serverSide.findUserByID, {userID: userID})
+                    .then(res => {
+                        let id = res.data.user._id
+                        let firstName = res.data.user.firstName
+                        let lastName = res.data.user.lastName
+                        let username = res.data.user.username
+                        let email = res.data.user.email
+                        let rep = res.data.user.rep
+                        let publicKey = res.data.user.publicKey
+                        this.authors.push({
+                            id: id,
+                            firstName: firstName, 
+                            lastName: lastName,
+                            username: username,
+                            email: email,
+                            rep: rep,
+                            publicKey: publicKey
+                        })
+                    })
+                )
+            })
+            Promise.all(promises)
         },
         resetModal() {
             this.authEmailsInput = []
@@ -183,11 +233,24 @@ export default {
                 )
             })
             Promise.all(promises).then(() => this.$router.go())
+        },
+        revokeAuthor(authorID, publicKey, publisherID) {
+            console.log(authorID)
+            axios.post(serverSide.revokeAuthorship,
+            {
+                authorID: authorID,
+                authorKey: publicKey,
+                publisherID: publisherID
+            })
+            .then( res => {
+                console.log(res.data.publisher)
+                this.$router.go()
+            })
         }
     },
     computed: {
     },
-    created: function() {
+    created: async function() {
         var username = localStorage.getItem('user')
         var userParsed = JSON.parse(username)
         this.id = userParsed._id
@@ -198,7 +261,7 @@ export default {
         this.publicKey = userParsed.publicKey
         this.role = userParsed.role
         this.hasPublisher = userParsed.hasPublisher
-        this.getPublisher()
+        await this.getPublisher()
     }
 }
 </script>

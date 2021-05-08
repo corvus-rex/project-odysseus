@@ -1,11 +1,12 @@
 import express from 'express';
-import {signup, login, auth} from '../controllers/users.js';
+import {findByID, signup, login, auth} from '../controllers/users.js';
 import {check} from 'express-validator';
 
 const router = express.Router();
 const app = express();
 app.use(express.json());
 
+router.post('/findByID', [], findByID)
 router.post(
     '/signup', 
     [
