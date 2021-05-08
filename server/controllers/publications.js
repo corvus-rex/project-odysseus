@@ -2,7 +2,7 @@ import {validationResult} from 'express-validator';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import {Publisher} from '../models/publications.js';
-import {registerUser} from './callContract.js';
+import {registerUser, electAuthorship, revokeAuthorship} from './callContract.js';
 import multer from 'multer';
 import { User } from '../models/users.js';
 
@@ -82,6 +82,109 @@ export const getPublisher = async (req, res) => {
             let chiefOfficer = await User.findOne({'_id': publisher.chiefOfficer})
             res.status(200).send({publisher: publisher, chiefOfficer: chiefOfficer})
         }
+    }
+    catch (err) {
+        console.log(err.message);
+        res.status(500).send("Error in Fetching");
+    }
+}
+export const findPublisherByID = async (req, res) => {
+    const errors = validationResult(req);
+    console.log(req.body)
+    if (!errors.isEmpty()) {
+        return res.status(400).json({errors: errors.array()});
+    };
+    try {
+        let pubID = req.body.pubID
+        let publisher = await Publisher.findOne({'_id': pubID})
+        res.status(200).send({publisher: publisher})
+    }
+    catch (err) {
+        console.log(err.message);
+        res.status(500).send("Error in Fetching");
+    }
+
+}
+
+export const acceptAuthorship = async (req, res) => {
+    const errors = validationResult(req);
+    console.log(req.body)
+    if (!errors.isEmpty()) {
+        res.status(400).json({errors: errors.array()});
+    };
+    try {
+        let userID = req.body.userID
+        let publisherID = req.body.publisherID
+        let newAuthor = req.body.publicKey
+        let user = await User.findOneAndUpdate({'_id': userID}, {'role': "Author", 'hasPublisher': true})
+        var publisherObj = null
+        let publisher = await Publisher.findOne({'_id': publisherID}, function(err, obj) {
+            publisherObj = obj
+        })
+        console.log(publisherObj)
+        let chiefOfficer = await User.findOne({'_id': publisherObj.chiefOfficer})
+        let pendingAuthors = publisherObj.pendingAuthors.filter(() => {
+            return publisherObj.pendingAuthors != userID
+        })
+        publisherObj.authors.push(userID)
+        console.log(publisherObj.authors)
+        publisher = await Publisher.findOneAndUpdate({'_id': publisherID}, 
+        {'authors': publisherObj.authors, 'pendingAuthors': pendingAuthors})
+        await user.save()
+        await publisher.save()
+        user = await User.findOne({'_id': userID})
+        publisher = await Publisher.findOne({'_id': publisherID})
+        electAuthorship(chiefOfficer.publicKey, newAuthor)
+        res.status(200).send({publisher: publisher, user: user})
+    }
+    catch (err) {
+        console.log(err.message);
+        res.status(500).send("Error in Fetching");
+    }
+}
+
+export const revokeAuthor = async (req, res) => {
+    const errors = validationResult(req);
+    console.log(req.body)
+    if (!errors.isEmpty()) {
+        res.status(400).json({errors: errors.array()});
+    };
+    try {
+        let authorID = req.body.authorID
+        let publisherID = req.body.publisherID
+        let authorKey = req.body.authorKey
+        let authors = []
+        let chiefOfficerID = null
+        let publisher = await Publisher.findOne({'_id': publisherID}, 
+        function(err, obj) {
+            authors = obj.authors
+            chiefOfficerID = obj.chiefOfficer
+        })
+        let filteredAuthors = authors.filter((author) => {
+            return author != authorID
+        })
+        console.log(authorID)
+        console.log(filteredAuthors)
+        let updatedPublisher = await Publisher.findByIdAndUpdate({
+            '_id': publisherID
+        }, {
+            'authors': filteredAuthors
+        })
+        let author = await User.findOneAndUpdate({
+            '_id': authorID
+        }, {
+            'hasPublisher': false
+        })
+        await updatedPublisher.save()
+        await author.save()
+        let chiefOfficerKey = null
+        let chiefOfficer = await User.findOne({
+            '_id': chiefOfficerID
+        }, function(err, obj) {
+            chiefOfficerKey = obj.publicKey
+        })
+        revokeAuthorship(chiefOfficerKey, authorKey)
+        res.status(200).send({publisher: updatedPublisher})
     }
     catch (err) {
         console.log(err.message);

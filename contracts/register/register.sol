@@ -21,6 +21,14 @@ contract Registration {
     mapping(address => Publisher) publishers;
     address[] private authorAddr;
 
+    function find(address value, address[] memory arr ) private returns(uint) {
+        uint i = 0;
+        while (arr[i] != value) {
+            i++;
+        }
+        return i;
+    }
+
     function newUser(string memory email, address key) public {
         bytes memory emailByte = bytes(users[key].email); // Uses memory
         require(emailByte.length == 0, "Public key already exist!");
@@ -41,10 +49,15 @@ contract Registration {
         _chiefOfficer.transfer(msg.value);
     }
 
-    function electAuthorship(address newAuthor) public {
-        address _chiefOfficer = msg.sender;
-        publishers[_chiefOfficer].authors.push(newAuthor);
+    function electAuthorship(address chiefOfficer, address newAuthor) public {
+        publishers[chiefOfficer].authors.push(newAuthor);
         users[newAuthor].authorship = true;
+    }
+
+    function revokeAuthorship(address chiefOfficer, address author) public {
+        uint index = find(author, publishers[chiefOfficer].authors);
+        delete publishers[chiefOfficer].authors[index];
+        users[author].authorship = false;
     }
 
     function getUser(address key) public view returns (string memory email) {
