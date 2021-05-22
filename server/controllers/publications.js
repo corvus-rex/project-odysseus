@@ -123,8 +123,8 @@ export const acceptAuthorship = async (req, res) => {
         })
         console.log(publisherObj)
         let chiefOfficer = await User.findOne({'_id': publisherObj.chiefOfficer})
-        let pendingAuthors = publisherObj.pendingAuthors.filter(() => {
-            return publisherObj.pendingAuthors != userID
+        let pendingAuthors = publisherObj.pendingAuthors.filter((author) => {
+            return author != userID
         })
         publisherObj.authors.push(userID)
         console.log(publisherObj.authors)
@@ -173,6 +173,7 @@ export const revokeAuthor = async (req, res) => {
         let author = await User.findOneAndUpdate({
             '_id': authorID
         }, {
+            'role': "Reader",
             'hasPublisher': false
         })
         await updatedPublisher.save()
