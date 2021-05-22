@@ -8,6 +8,7 @@ import Profile from '../views/Profile.vue'
 import appName from '../appName'
 import RegisterPublisher from '../views/RegisterPublisher.vue'
 import Newsroom from '../views/Newsroom.vue'
+import NewDraft from '../views/NewDraft.vue'
 
 Vue.use(VueRouter)
 
@@ -71,6 +72,18 @@ const routes = [
     name: 'newsroom',
     components: {
       default: Newsroom,
+      nav: Nav
+    },
+    props: {appName: appName},
+    meta: {
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/drafts/new',
+    name: 'new-draft',
+    components: {
+      default: NewDraft,
       nav: Nav
     },
     props: {appName: appName},

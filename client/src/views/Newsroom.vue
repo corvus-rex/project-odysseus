@@ -13,6 +13,10 @@
                     
                 </b-card>
                 <b-card style="width: 30rem;" v-if="drafts" :title="getDraftsTitle()" class="mt-3 ml-1">
+                    <router-link :to="{name: 'new-draft'}">
+                        <b-button id="register-pub" 
+                        variant="primary"> Create a New Draft </b-button>
+                    </router-link>
                 </b-card>
             </div>
         </div>
