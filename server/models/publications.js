@@ -56,7 +56,7 @@ const PublicationSchema = mongoose.Schema({
         ref: 'Publisher'
     },
     img: String,
-    article: Object,
+    article: String,
     rep: {
         type: Number,
         default: 0

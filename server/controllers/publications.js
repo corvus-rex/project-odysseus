@@ -1,7 +1,7 @@
 import {validationResult} from 'express-validator';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import {Publisher} from '../models/publications.js';
+import {Publisher, Publication} from '../models/publications.js';
 import {registerUser, electAuthorship, revokeAuthorship} from './callContract.js';
 import multer from 'multer';
 import { User } from '../models/users.js';
@@ -190,5 +190,41 @@ export const revokeAuthor = async (req, res) => {
     catch (err) {
         console.log(err.message);
         res.status(500).send("Error in Fetching");
+    }
+}
+
+export const newDraft = async (req, res) => {
+    const errors = validationResult(req);
+    console.log(req.body)
+    if (!errors.isEmpty()) {
+        return res.status(400).json({errors: errors.array()});
+    };
+    try {
+        let author = req.body.authorID
+        let publisher = req.body.publisherID
+        let title = req.body.title
+        let description = req.body.description
+        let topic = req.body.topic
+        let locations = req.body.locations
+        let tags = req.body.tags
+        let content = req.body.content
+        let publication = new Publication({
+            author: author,
+            publisher: publisher,
+            title: title,
+            description: description,
+            topic: topic,
+            locations: locations,
+            tags: tags,
+            article: content
+        })
+        console.log(content)
+        console.log(publication)
+        await publication.save()
+        res.status(200).send({publication: publication})
+    }
+    catch (err) {
+        console.log(err.message);
+        res.status(500).send("Error in Saving");
     }
 }

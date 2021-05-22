@@ -56,7 +56,7 @@
           <quill-editor
             id="news-editor"
             ref="myQuillEditor"
-            v-model="content"
+            v-model="news"
             :options="editorOption"
             @blur="onEditorBlur($event)"
             @focus="onEditorFocus($event)"
@@ -64,7 +64,7 @@
           />
         </b-form-group>
         <div class="mt-2">
-          <b-button variant="primary" type="submit" @click="handleRegister">Save</b-button>
+          <b-button variant="primary" type="submit" @click="saveDraft">Save</b-button>
         </div>
       </b-form>
     </b-card>
@@ -79,8 +79,8 @@ import 'quill/dist/quill.snow.css'
 import 'quill/dist/quill.bubble.css'
 
 import { quillEditor } from 'vue-quill-editor'
-// import serverSide from '../serverSide'
-// import axios from 'axios'
+import serverSide from '../serverSide'
+import axios from 'axios'
 // import {registerPublisher} from '../contracts/callContract'
 
 export default {
@@ -89,12 +89,14 @@ export default {
         return {
             appName: appName,
             author: {},
+            publisher: {},
+            chiefOfficer: '',
             newsTitle: "",
             newsDescription: "",
             newsTopic: "",
             newsTags: [],
             newsLocations: [],
-            news: {},
+            news: null,
             editorOption: {
               'theme': 'snow',
               'scrollingContainer': 'div.ql-container.ql-snow'
@@ -121,13 +123,41 @@ export default {
       },
       onEditorChange({ quill, html, text }) {
         console.log('editor change!', quill, html, text)
-        this.content = html
+        // this.news = html
+      },
+      getPublisher() {
+          axios.post(serverSide.getPublisher, {userID: this.author._id, userRole: this.author.role})
+          .then((res) => {
+              this.publisher = res.data.publisher
+              this.chiefOfficer = res.data.chiefOfficer
+              console.log(this.publisher)
+          })
+      },
+      saveDraft() {
+        axios.post(serverSide.newDraft,{
+          authorID: this.author._id,
+          publisherID: this.publisher._id,
+          title: this.newsTitle,
+          description: this.newsDescription,
+          topic: this.newsTopic,
+          tags: this.newsTags,
+          locations: this.newsLocations,
+          content: this.news
+        })
+        .then((res) => {
+          console.log(res.data.publication)
+          this.$router.push({name: "newsroom"})
+        })
+      },
+      viewDraft() {
+        console.log(this.news)
       }
     },
-    created: function() {
+    created: async function() {
         var user = localStorage.getItem('user')
         var userParsed = JSON.parse(user)
         this.author = userParsed
+        await this.getPublisher()
     }
 }
 </script>

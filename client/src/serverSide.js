@@ -10,6 +10,7 @@ const serverSide = {
     inviteAuthors: url + 'notif/invite-auth',
     acceptAuthorship: url + 'publisher/accept-author',
     revokeAuthorship: url + 'publisher/revoke-author',
+    newDraft: url + 'publisher/new-draft',
     getNotifs: url + 'notif/get-notifs',
     changeNotifStatus: url + 'notif/change-status'
 };
