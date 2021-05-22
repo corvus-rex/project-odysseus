@@ -7,6 +7,7 @@ import Signup from '../views/Signup.vue'
 import Profile from '../views/Profile.vue'
 import appName from '../appName'
 import RegisterPublisher from '../views/RegisterPublisher.vue'
+import Newsroom from '../views/Newsroom.vue'
 
 Vue.use(VueRouter)
 
@@ -58,6 +59,18 @@ const routes = [
     name: 'new-publisher',
     components: {
       default: RegisterPublisher,
+      nav: Nav
+    },
+    props: {appName: appName},
+    meta: {
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/publishers/newsroom',
+    name: 'newsroom',
+    components: {
+      default: Newsroom,
       nav: Nav
     },
     props: {appName: appName},

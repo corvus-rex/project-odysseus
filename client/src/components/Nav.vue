@@ -12,7 +12,10 @@
 
       <!-- Right aligned nav items -->
       <b-navbar-nav class="ml-auto">
-          <b-nav-item href='users/profile'>
+          <b-nav-item href='/publishers/newsroom' class="special-auth" v-if="hasPublisher">
+            Newsroom
+          </b-nav-item>
+          <b-nav-item href='/users/profile'>
               <b-icon-person-circle class="hovericon"></b-icon-person-circle>
           </b-nav-item>
           <b-nav-item href='/users/login' v-show="!this.$store.getters.isLoggedIn">Login</b-nav-item>
@@ -58,6 +61,11 @@
     background: #eba434;
 }
 
+.special-auth {
+  border-style: solid;
+  border-color: white;
+}
+
 .notif-title {
   font-size: 0.8rem;
 }
@@ -81,7 +89,8 @@ export default {
     return {
       user: null,
       notifs: null,
-      notifNum: 0
+      notifNum: 0,
+      hasPublisher: false
     }
   },
   computed: {
@@ -97,7 +106,11 @@ export default {
     },
   },
   created() {
+    var user = localStorage.getItem('user')
+    var userParsed = JSON.parse(user)
+    this.user = userParsed
     this.getNotifNum()
+    this.hasPublisher = this.user.hasPublisher
   },
   methods: {
     handleLogout() {
@@ -108,10 +121,8 @@ export default {
     },
     getNotifNum() {
       try {
-        var user = localStorage.getItem('user')
-        var userParsed = JSON.parse(user)
         var promises = []
-        promises.push(axios.post(serverSide.getNotifs, {userID: userParsed._id})
+        promises.push(axios.post(serverSide.getNotifs, {userID: this.user._id})
         .then(res => {
           console.log(res.data.notifs.length.toString())
           this.notifs = res.data.notifs
