@@ -200,7 +200,8 @@ export const newDraft = async (req, res) => {
         return res.status(400).json({errors: errors.array()});
     };
     try {
-        let author = req.body.authorID
+        let authorID = req.body.authorID
+        let author = await User.findOne({'_id': authorID})
         let publisher = req.body.publisherID
         let title = req.body.title
         let description = req.body.description
@@ -209,7 +210,7 @@ export const newDraft = async (req, res) => {
         let tags = req.body.tags
         let content = req.body.content
         let publication = new Publication({
-            author: author,
+            authors: [author],
             publisher: publisher,
             title: title,
             description: description,
@@ -220,6 +221,7 @@ export const newDraft = async (req, res) => {
         })
         console.log(content)
         console.log(publication)
+        console.log(authorID)
         await publication.save()
         res.status(200).send({publication: publication})
     }
@@ -227,4 +229,45 @@ export const newDraft = async (req, res) => {
         console.log(err.message);
         res.status(500).send("Error in Saving");
     }
+}
+
+export const getDraft = async (req, res) => {
+    const errors = validationResult(req);
+    console.log(req.body)
+    if (!errors.isEmpty()) {
+        return res.status(400).json({errors: errors.array()});
+    };
+    try {
+        let draftID = req.body.draftID
+        let draft = await Publication.find({'_id': draftID})
+        console.log(draft)
+        res.status(200).send({draft: draft})
+    }
+    catch (err) {
+        console.log(err.message);
+        res.status(500).send("Error in Saving");
+    }
+}
+
+export const getDrafts = async (req, res) => {
+    const errors = validationResult(req);
+    console.log(req.body)
+    if (!errors.isEmpty()) {
+        return res.status(400).json({errors: errors.array()});
+    };
+    try {
+        let publisherID = req.body.publisherID
+        console.log(publisherID)
+        let drafts = await Publication.find({
+            'status': 'Draft',
+            'publisher': publisherID
+        })
+        console.log("YEET")
+        res.status(200).send({drafts: drafts})
+    }
+    catch (err) {
+        console.log(err.message);
+        res.status(500).send("Error in Saving");
+    }
+
 }

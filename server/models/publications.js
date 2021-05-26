@@ -47,10 +47,7 @@ const PublicationSchema = mongoose.Schema({
         type: String,
         default: "Draft"
     },
-    author: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-    },
+    authors: [Object],
     publisher: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Publisher'

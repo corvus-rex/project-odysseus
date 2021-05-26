@@ -1,7 +1,7 @@
 import express from 'express';
 import {registerPublisher, getPublisher, 
     findPublisherByID, acceptAuthorship, revokeAuthor,
-    newDraft} from '../controllers/publications.js'
+    newDraft, getDraft, getDrafts} from '../controllers/publications.js'
 import {check} from 'express-validator';
 
 const router = express.Router();
@@ -14,5 +14,7 @@ router.post('/findByID', [], findPublisherByID);
 router.post('/accept-author', [], acceptAuthorship)
 router.post('/revoke-author', [], revokeAuthor)
 router.post('/new-draft', [], newDraft)
+router.post('/get-draft', [], getDraft)
+router.post('/get-drafts', [], getDrafts)
 
 export default router;
