@@ -78,7 +78,8 @@ export const getPublisher = async (req, res) => {
             res.status(200).send({publisher: publisher, chiefOfficer: chiefOfficer})
         }
         else if (role == 'Author') {
-            let publisher = await Publisher.find({'authors': userID})
+            let publisher = await Publisher.findOne({'authors': userID})
+            console.log("Publisher: ", publisher)
             let chiefOfficer = await User.findOne({'_id': publisher.chiefOfficer})
             res.status(200).send({publisher: publisher, chiefOfficer: chiefOfficer})
         }
@@ -117,7 +118,7 @@ export const acceptAuthorship = async (req, res) => {
         let publisherID = req.body.publisherID
         let newAuthor = req.body.publicKey
         let user = await User.findOneAndUpdate({'_id': userID}, {'role': "Author", 'hasPublisher': true})
-        var publisherObj = null
+        var publisherObj
         let publisher = await Publisher.findOne({'_id': publisherID}, function(err, obj) {
             publisherObj = obj
         })
@@ -269,5 +270,63 @@ export const getDrafts = async (req, res) => {
         console.log(err.message);
         res.status(500).send("Error in Saving");
     }
+}
 
+export const editDraft = async (req, res) => {
+    const errors = validationResult(req);
+    console.log(req.body)
+    if (!errors.isEmpty()) {
+        return res.status(400).json({errors: errors.array()});
+    };
+    try {
+        let draftID = req.body.draftID
+        let authorID = req.body.authorID
+        let author = await User.findOne({'_id': authorID})
+        let title = req.body.title
+        let description = req.body.description
+        let topic = req.body.topic
+        let locations = req.body.locations
+        let tags = req.body.tags
+        let content = req.body.article
+        let authors = []
+        let currentAuthorsID = []
+        let publication = await Publication.findOne({'_id': draftID}, 
+            function(err, obj) {
+                authors = obj.authors
+                for (var i=0;i<authors.length;i++) {
+                    currentAuthorsID.push(authors[i]._id.toString())
+                }
+                console.log(currentAuthorsID)
+                console.log(authorID)
+                if(currentAuthorsID.includes(authorID)) {
+                    console.log("Author is already included")
+                }
+                else {
+                    console.log("Author is added")
+                    authors.push(author)
+                }
+            }
+        )
+        let publicationNew = await Publication.findOneAndUpdate({
+            '_id': draftID
+            },
+            {
+                authors: authors,
+                datePublished: Date.now(),
+                title: title,
+                description: description,
+                topic: topic,
+                locations: locations,
+                tags: tags,
+                article: content
+            }
+        )
+        console.log(publicationNew)
+        await publicationNew.save()
+        res.status(200).send({publication: publicationNew})
+    }
+    catch (err) {
+        console.log(err.message);
+        res.status(500).send("Error in Saving");
+    }
 }

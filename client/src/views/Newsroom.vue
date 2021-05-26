@@ -23,7 +23,9 @@
                                 <b-row>
                                     <b-col class="publication-title" cols="8">{{ draft.title }}</b-col>
                                     <b-col class="draft-btn" cols="2">
-                                        <b-button variant="secondary">Edit</b-button>
+                                        <b-button variant="secondary"
+                                        :to="{name: 'edit-draft', query: {id: draft._id}}">
+                                        Edit</b-button>
                                     </b-col>
                                     <b-col class="draft-btn" cols="2">
                                         <b-button variant="danger">Publish</b-button>

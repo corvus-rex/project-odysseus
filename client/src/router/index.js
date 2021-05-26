@@ -9,6 +9,7 @@ import appName from '../appName'
 import RegisterPublisher from '../views/RegisterPublisher.vue'
 import Newsroom from '../views/Newsroom.vue'
 import NewDraft from '../views/NewDraft.vue'
+import EditDraft from '../views/EditDraft.vue'
 
 Vue.use(VueRouter)
 
@@ -91,6 +92,21 @@ const routes = [
       requiresAuth: true
     }
   },
+  {
+    path: 'drafts/edit',
+    name: 'edit-draft',
+    components: {
+      default: EditDraft,
+      nav: Nav
+    },
+    props: route => ({
+      draftID: route.query.id,
+      appName: appName
+    }),
+    meta: {
+      requiresAuth: true
+    }
+  }
 ]
 
 const router = new VueRouter({

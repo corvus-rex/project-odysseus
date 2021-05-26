@@ -13,6 +13,7 @@ const serverSide = {
     getDraft: url + 'publisher/get-draft',
     getDrafts: url + 'publisher/get-drafts',
     newDraft: url + 'publisher/new-draft',
+    editDraft: url + 'publisher/edit-draft',
     getNotifs: url + 'notif/get-notifs',
     changeNotifStatus: url + 'notif/change-status',
 };
