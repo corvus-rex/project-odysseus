@@ -10,7 +10,34 @@
             </b-list-group>
             <div id="dashboard">
                 <b-card style="width: 50rem;" v-if="published" :title="getPublishedTitle()" class="mt-3 ml-1">
-                    
+                    <b-list-group class="mt-3">
+                        <b-list-group-item v-for="published in publishedList" :key="published" button>
+                            <b-container>
+                                <b-row>
+                                    <b-col class="publication-title" cols="8">{{ published.title }}</b-col>
+                                    <b-col class="draft-btn" cols="4">
+                                        <b-button variant="primary"
+                                        :to="{name: 'revise-published', query: {id: published._id}}">
+                                        New Revision </b-button>
+                                    </b-col>
+                                </b-row>
+                                <b-row>
+                                    <b-col class="publication-meta" cols="8">
+                                        <u>Written by</u>: {{ getAuthors(published.authors) }}
+                                    </b-col>
+                                    <b-col class="publication-meta" cols="8">
+                                        <u>Topic</u>: {{ published.topic }}
+                                    </b-col>
+                                    <b-col class="publication-meta" cols="8">
+                                        <u>Date Published</u>: {{ published.datePublished }}
+                                    </b-col>
+                                    <b-col class="publication-meta" cols="8">
+                                        <u>Rep Score</u>: {{ published.rep }}
+                                    </b-col>
+                                </b-row>
+                            </b-container>
+                        </b-list-group-item>
+                    </b-list-group>
                 </b-card>
                 <b-card style="width: 50rem;" v-if="drafts" :title="getDraftsTitle()" class="mt-3 ml-1">
                     <router-link :to="{name: 'new-draft'}">
@@ -28,7 +55,7 @@
                                         Edit</b-button>
                                     </b-col>
                                     <b-col class="draft-btn" cols="2">
-                                        <b-button variant="danger">Publish</b-button>
+                                        <b-button variant="danger" @click="confirmModal(draft)">Publish</b-button>
                                     </b-col>
                                 </b-row>
                                 <b-row>
@@ -47,15 +74,20 @@
                     </b-list-group>
                 </b-card>
             </div>
+            <b-modal title="Confirm Publish Article" id="confirm-publish" @ok="publishDraft">
+                <p class="confirm-text"> Are you sure you wish to publish this article? </p>
+            </b-modal>
         </div>
     </div>
 </template>
 
 <script>
+import sha256 from 'js-sha256'
 import Nav from '../components/Nav'
 import appName from '../appName'
 import serverSide from '../serverSide'
 import axios from 'axios'
+import {publishDraft} from '../contracts/callContract'
 
 export default {
     name: 'Newsroom',
@@ -68,7 +100,8 @@ export default {
             published: true,
             drafts: false,
             publishedList: [],
-            draftList: []
+            draftList: [],
+            selectedPublication: null
         }
     },
     props: {
@@ -96,6 +129,17 @@ export default {
             .then((res) => {
                 this.publisher = res.data.publisher
                 this.chiefOfficer = res.data.chiefOfficer
+                this.getPublishedList()
+            })
+        },
+        getPublishedList() {
+            console.log(this.publisher._id)
+            axios.post(serverSide.getPublishedList, {
+                publisherID: this.publisher._id
+            })
+            .then((res) => {
+                this.publishedList = res.data.published
+                console.log(this.publishedList)
                 this.getDraftList()
             })
         },
@@ -107,7 +151,6 @@ export default {
             .then((res) => {
                 this.draftList = res.data.drafts
             })
-
         },
         getAuthors(authors) {
             var authorString = ''
@@ -123,6 +166,35 @@ export default {
                 idx += 1
             }
             return authorString
+        },
+        confirmModal(draft) {
+            this.selectedPublication = draft
+            this.$bvModal.show('confirm-publish')
+        },
+        publishDraft() {
+            console.log(this.selectedPublication)
+            if (typeof window.ethereum !== 'undefined') {
+              window.ethereum.request({ method: 'eth_requestAccounts' });
+            }
+            else {
+              alert('Please install MetaMask!')
+            }
+            var authors = this.selectedPublication.authors
+            var authorsKey = []
+            for (var i = 0; i < authors.length; i++) {
+                authorsKey.push(authors[i].publicKey)
+            }
+            var address = window.ethereum.selectedAddress
+            var hashedDraft = sha256.update(this.selectedPublication.article.toString())
+            publishDraft(authorsKey, this.selectedPublication._id, hashedDraft, address)
+            axios.post(serverSide.publishDraft, {
+                draft: this.selectedPublication,
+                approver: this.user._id
+            })
+            .then((res) => {
+                console.log(res.data.publication)
+                this.$router.go()
+            })
         }
     },
     computed: {

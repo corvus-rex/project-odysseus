@@ -48,6 +48,10 @@ const PublicationSchema = mongoose.Schema({
         default: "Draft"
     },
     authors: [Object],
+    approver: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
     publisher: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Publisher'

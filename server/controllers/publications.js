@@ -194,6 +194,27 @@ export const revokeAuthor = async (req, res) => {
     }
 }
 
+export const getPublishedList = async (req, res) => {
+    const errors = validationResult(req);
+    console.log(req.body)
+    if (!errors.isEmpty()) {
+        return res.status(400).json({errors: errors.array()});
+    };
+    try {
+        let publisherID = req.body.publisherID
+        console.log(publisherID)
+        let published = await Publication.find({
+            'status': 'Published',
+            'publisher': publisherID
+        })
+        res.status(200).send({published: published})
+    }
+    catch (err) {
+        console.log(err.message);
+        res.status(500).send("Error in Fetching");
+    }
+}
+
 export const newDraft = async (req, res) => {
     const errors = validationResult(req);
     console.log(req.body)
@@ -324,6 +345,32 @@ export const editDraft = async (req, res) => {
         console.log(publicationNew)
         await publicationNew.save()
         res.status(200).send({publication: publicationNew})
+    }
+    catch (err) {
+        console.log(err.message);
+        res.status(500).send("Error in Saving");
+    }
+}
+
+export const publishDraft = async (req, res) => {
+    const errors = validationResult(req);
+    console.log(req.body)
+    if (!errors.isEmpty()) {
+        return res.status(400).json({errors: errors.array()});
+    };
+    try {
+        let draft = req.body.draft
+        let draftID = req.body.draft._id
+        let approver = req.body.approver
+        let publication = await Publication.findOneAndUpdate({'_id': draftID}, {
+            'status': 'Published',
+            'datePublished': Date.now(),
+            'approver': approver
+        })
+        console.log("Draft to be published: ", publication)
+        await publication.save()
+        res.status(200).send({publication: publication})
+
     }
     catch (err) {
         console.log(err.message);
