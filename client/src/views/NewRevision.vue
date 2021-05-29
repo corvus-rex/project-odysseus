@@ -3,7 +3,7 @@
     <Nav :appName= "appName" />
     <b-card 
     style="max-width: 70rem;" 
-    title="Create a New Draft" 
+    title="Create a New Revision" 
     class="mt-5 ml-4">
       <b-form @submit.stop.prevent="onSubmit">
         <b-form-group label="Article Title" label-for="title-input">
@@ -64,7 +64,7 @@
           />
         </b-form-group>
         <div class="mt-2">
-          <b-button variant="primary" type="submit" @click="editDraft">Save</b-button>
+          <b-button variant="primary" type="submit" @click="newRevision">Create Revision</b-button>
         </div>
       </b-form>
     </b-card>
@@ -88,8 +88,9 @@ export default {
     data: () => {
         return {
             appName: appName,
-            draftID: "",
+            publicationID: "",
             draftPublisher: "",
+            prevVersions: [],
             author: {},
             publisher: {},
             chiefOfficer: '',
@@ -133,12 +134,12 @@ export default {
               this.publisher = res.data.publisher
               this.chiefOfficer = res.data.chiefOfficer
               console.log(this.publisher)
-              this.getDraft()
+              this.getPublication()
           })
       },
-      getDraft() {
-        this.draftID = this.$route.query.id
-        axios.post(serverSide.getPublication, {publicationID: this.draftID})
+      getPublication() {
+        this.publicationID = this.$route.query.id
+        axios.post(serverSide.getPublication, {publicationID: this.publicationID})
         .then((res) => {
           if(this.publisher._id != res.data.publication[0].publisher) {
             this.$router.push({name: "newsroom"})
@@ -150,13 +151,16 @@ export default {
             this.newsTags = res.data.publication[0].tags
             this.newsLocations = res.data.publication[0].locations
             this.news = res.data.publication[0].article
+            this.prevVersions = res.data.publication[0].prevVersions
           }
         })
       },
-      editDraft() {
-        axios.post(serverSide.editDraft,{
-          draftID: this.draftID,
+      newRevision() {
+        axios.post(serverSide.newRevision,{
+          publicationID: this.publicationID,
           authorID: this.author._id,
+          publisherID: this.publisher._id,
+          prevVersions: this.prevVersions,
           title: this.newsTitle,
           description: this.newsDescription,
           topic: this.newsTopic,
@@ -169,7 +173,7 @@ export default {
           this.$router.push({name: "newsroom"})
         })
       },
-      viewDraft() {
+      viewPublication() {
         console.log(this.news)
       }
     },

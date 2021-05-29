@@ -10,6 +10,7 @@ import RegisterPublisher from '../views/RegisterPublisher.vue'
 import Newsroom from '../views/Newsroom.vue'
 import NewDraft from '../views/NewDraft.vue'
 import EditDraft from '../views/EditDraft.vue'
+import NewRevision from '../views/NewRevision.vue'
 
 Vue.use(VueRouter)
 
@@ -93,7 +94,7 @@ const routes = [
     }
   },
   {
-    path: 'drafts/edit',
+    path: '/drafts/edit',
     name: 'edit-draft',
     components: {
       default: EditDraft,
@@ -101,6 +102,21 @@ const routes = [
     },
     props: route => ({
       draftID: route.query.id,
+      appName: appName
+    }),
+    meta: {
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/news/newRevision',
+    name: 'new-revision',
+    components: {
+      default: NewRevision,
+      nav: Nav
+    },
+    props: route => ({
+      publicationID: route.query.id,
       appName: appName
     }),
     meta: {

@@ -11,13 +11,13 @@
             <div id="dashboard">
                 <b-card style="width: 50rem;" v-if="published" :title="getPublishedTitle()" class="mt-3 ml-1">
                     <b-list-group class="mt-3">
-                        <b-list-group-item v-for="published in publishedList" :key="published" button>
+                        <b-list-group-item v-for="published in publishedList" :key="published">
                             <b-container>
                                 <b-row>
                                     <b-col class="publication-title" cols="8">{{ published.title }}</b-col>
                                     <b-col class="draft-btn" cols="4">
                                         <b-button variant="primary"
-                                        :to="{name: 'revise-published', query: {id: published._id}}">
+                                        :to="{name: 'new-revision', query: {id: published._id}}">
                                         New Revision </b-button>
                                     </b-col>
                                 </b-row>
@@ -33,6 +33,9 @@
                                     </b-col>
                                     <b-col class="publication-meta" cols="8">
                                         <u>Rep Score</u>: {{ published.rep }}
+                                    </b-col>
+                                    <b-col class="publication-meta" cols="8">
+                                        <u>Previous Versions</u>: {{ getPrevVersions(published.prevVersions) }}
                                     </b-col>
                                 </b-row>
                             </b-container>
@@ -166,6 +169,23 @@ export default {
                 idx += 1
             }
             return authorString
+        },
+        getPrevVersions(prevVersions) {
+            var prevVersionsStr = ''
+            var idx = 0
+            if (prevVersions.length != 0) {
+                for (var i=0; i < prevVersions.length; i++) {
+                    prevVersionsStr += prevVersions[i]
+                    if(idx != prevVersions.length - 1) {
+                        prevVersionsStr += ", "
+                    }
+                    idx += 1
+                }
+                return prevVersionsStr
+            }
+            else {
+                return "None"
+            }
         },
         confirmModal(draft) {
             this.selectedPublication = draft
