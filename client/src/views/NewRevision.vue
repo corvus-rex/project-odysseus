@@ -81,7 +81,8 @@ import 'quill/dist/quill.bubble.css'
 import { quillEditor } from 'vue-quill-editor'
 import serverSide from '../serverSide'
 import axios from 'axios'
-// import {registerPublisher} from '../contracts/callContract'
+import { newRevision } from '../contracts/callContract'
+import sha256 from 'js-sha256'
 
 export default {
     name: 'newDraft',
@@ -170,6 +171,20 @@ export default {
         })
         .then((res) => {
           console.log(res.data.publication)
+          if (typeof window.ethereum !== 'undefined') {
+            window.ethereum.request({ method: 'eth_requestAccounts' });
+          }
+          else {
+            alert('Please install MetaMask!')
+          }
+          var authors = res.data.publication.authors
+          var authorsKey = []
+          for (var i = 0; i < authors.length; i++) {
+              authorsKey.push(authors[i].publicKey)
+          }
+          var address = window.ethereum.selectedAddress
+          var hashedArticle = sha256.update(res.data.publication.article.toString())
+          newRevision(authorsKey, res.data.publication._id, hashedArticle, this.publicationID, address)
           this.$router.push({name: "newsroom"})
         })
       },

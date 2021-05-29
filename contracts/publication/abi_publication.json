@@ -21,5 +21,33 @@
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address[]",
+				"name": "newsAuthors",
+				"type": "address[]"
+			},
+			{
+				"internalType": "string",
+				"name": "id",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "newsHash",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "lastVers",
+				"type": "string"
+			}
+		],
+		"name": "revise",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
 	}
 ]

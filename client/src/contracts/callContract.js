@@ -43,3 +43,21 @@ export function publishDraft(authors, draftID, hash, approverKey) {
         console.log(receipt)
     })
 }
+
+export function newRevision(authors, publicationID, hash, lastVers, approverKey) {
+    
+    var abi = publicationABI
+    var receipt = publicationReceipt
+    var contractAddress = receipt.contractAddress
+    window.web3 = new Web3(window.ethereum)
+    var publicationContract = new window.web3.eth.Contract(abi, contractAddress, {
+        from: approverKey,
+        gasPrice: 21000,
+    })
+    publicationContract.methods.revise(authors, publicationID, hash, lastVers).send({
+        from: approverKey,
+        gasPrice: 21000
+    }).on('receipt', (receipt) => {
+        console.log(receipt)
+    })
+}
