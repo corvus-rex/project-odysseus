@@ -2,6 +2,7 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import store from '../store/store'
 import Nav from '../components/Nav.vue'
+import Home from '../views/Home.vue'
 import Login from '../views/Login.vue'
 import Signup from '../views/Signup.vue'
 import Profile from '../views/Profile.vue'
@@ -18,7 +19,10 @@ const routes = [
   {
     path: '/',
     name: 'home',
-    component: Nav,
+    components: {
+      default: Home,
+      nav: Nav
+    },
     props: {appName: appName}
   },
   {

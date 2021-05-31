@@ -446,3 +446,17 @@ export const newRevision = async (req, res) => {
         res.status(500).send("Error in Saving");
     }
 }
+
+export const getNews = async (req, res) => {
+    try {
+        let published = await Publication.find({
+            'status': 'Published',
+            'revised': false
+        })
+        res.status(200).send({news: published})
+    }
+    catch (err) {
+        console.log(err.message);
+        res.status(500).send("Error in Fetching");
+    }
+}

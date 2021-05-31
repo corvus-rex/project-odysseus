@@ -4,6 +4,7 @@ const serverSide = {
     findUserByID: url + 'user/findByID',
     login: url + 'user/login',
     signup: url + 'user/signup',
+    getNews: url + 'publisher/get-news',
     registerPublisher: url + 'publisher/new',
     getPublisher: url + 'publisher/',
     findPublisherByID: url + 'publisher/findByID',
