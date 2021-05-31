@@ -183,8 +183,13 @@ export default {
               authorsKey.push(authors[i].publicKey)
           }
           var address = window.ethereum.selectedAddress
-          var hashedArticle = sha256.update(res.data.publication.article.toString())
-          newRevision(authorsKey, res.data.publication._id, hashedArticle, this.publicationID, address)
+          var toBeHashed = res.data.publication
+          delete toBeHashed.revised
+          delete toBeHashed.status
+          var stringifiedPublication = JSON.stringify(toBeHashed)
+          var hashedArticle = sha256.create()
+          hashedArticle.update(stringifiedPublication)
+          newRevision(authorsKey, res.data.publication._id, hashedArticle.hex(), this.publicationID, address)
           this.$router.push({name: "newsroom"})
         })
       },

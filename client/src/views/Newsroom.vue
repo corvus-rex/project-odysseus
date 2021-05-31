@@ -104,7 +104,8 @@ export default {
             drafts: false,
             publishedList: [],
             draftList: [],
-            selectedPublication: null
+            selectedPublication: null,
+            hashedDraft: sha256.create()
         }
     },
     props: {
@@ -189,7 +190,14 @@ export default {
         },
         confirmModal(draft) {
             this.selectedPublication = draft
+            var toBeHashed = this.selectedPublication
+            delete toBeHashed.revised
+            delete toBeHashed.status
+            var stringifiedPublication = JSON.stringify(toBeHashed)
+            this.hashedDraft.update(stringifiedPublication)
             this.$bvModal.show('confirm-publish')
+            console.log(stringifiedPublication)
+            console.log(this.hashedDraft.hex())
         },
         publishDraft() {
             console.log(this.selectedPublication)
@@ -205,8 +213,7 @@ export default {
                 authorsKey.push(authors[i].publicKey)
             }
             var address = window.ethereum.selectedAddress
-            var hashedDraft = sha256.update(this.selectedPublication.article.toString())
-            publishDraft(authorsKey, this.selectedPublication._id, hashedDraft, address)
+            publishDraft(authorsKey, this.selectedPublication._id, this.hashedDraft.hex(), address)
             axios.post(serverSide.publishDraft, {
                 draft: this.selectedPublication,
                 approver: this.user._id
