@@ -3,6 +3,7 @@ import VueRouter from 'vue-router'
 import store from '../store/store'
 import Nav from '../components/Nav.vue'
 import Home from '../views/Home.vue'
+import News from '../views/News.vue'
 import Login from '../views/Login.vue'
 import Signup from '../views/Signup.vue'
 import Profile from '../views/Profile.vue'
@@ -24,6 +25,18 @@ const routes = [
       nav: Nav
     },
     props: {appName: appName}
+  },
+  {
+    path: '/news/',
+    name: 'news',
+    components: {
+      default: News,
+      nav: Nav
+    },
+    props: route => ({
+      draftID: route.query.id,
+      appName: appName
+    }),
   },
   {
     path: '/users/login',
