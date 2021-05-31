@@ -10,8 +10,15 @@ const serverSide = {
     inviteAuthors: url + 'notif/invite-auth',
     acceptAuthorship: url + 'publisher/accept-author',
     revokeAuthorship: url + 'publisher/revoke-author',
+    getPublishedList: url + 'publisher/get-published-list',
+    newRevision: url + 'publisher/new-revision',
+    publishDraft: url + 'publisher/publish-draft',
+    getPublication: url + 'publisher/get-publication',
+    getDrafts: url + 'publisher/get-drafts',
+    newDraft: url + 'publisher/new-draft',
+    editDraft: url + 'publisher/edit-draft',
     getNotifs: url + 'notif/get-notifs',
-    changeNotifStatus: url + 'notif/change-status'
+    changeNotifStatus: url + 'notif/change-status',
 };
 
 export default serverSide;

@@ -28,8 +28,14 @@ const PublisherSchema = mongoose.Schema({
 const PublicationSchema = mongoose.Schema({
     title: String,
     description: String,
-    datePublished: Date,
-    revised: Boolean,
+    datePublished: {
+        type: Date,
+        default: Date.now()
+    },
+    revised: {
+        type: Boolean,
+        default: false
+    },
     prevVersions: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Publication'
@@ -37,7 +43,12 @@ const PublicationSchema = mongoose.Schema({
     topic: String,
     tags: [String],
     locations: [String],
-    author: {
+    status: {
+        type: String,
+        default: "Draft"
+    },
+    authors: [Object],
+    approver: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     },

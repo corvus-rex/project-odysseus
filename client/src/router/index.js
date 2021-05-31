@@ -7,6 +7,10 @@ import Signup from '../views/Signup.vue'
 import Profile from '../views/Profile.vue'
 import appName from '../appName'
 import RegisterPublisher from '../views/RegisterPublisher.vue'
+import Newsroom from '../views/Newsroom.vue'
+import NewDraft from '../views/NewDraft.vue'
+import EditDraft from '../views/EditDraft.vue'
+import NewRevision from '../views/NewRevision.vue'
 
 Vue.use(VueRouter)
 
@@ -65,6 +69,60 @@ const routes = [
       requiresAuth: true
     }
   },
+  {
+    path: '/publishers/newsroom',
+    name: 'newsroom',
+    components: {
+      default: Newsroom,
+      nav: Nav
+    },
+    props: {appName: appName},
+    meta: {
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/drafts/new',
+    name: 'new-draft',
+    components: {
+      default: NewDraft,
+      nav: Nav
+    },
+    props: {appName: appName},
+    meta: {
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/drafts/edit',
+    name: 'edit-draft',
+    components: {
+      default: EditDraft,
+      nav: Nav
+    },
+    props: route => ({
+      draftID: route.query.id,
+      appName: appName
+    }),
+    meta: {
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/news/newRevision',
+    name: 'new-revision',
+    components: {
+      default: NewRevision,
+      nav: Nav
+    },
+    props: route => ({
+      publicationID: route.query.id,
+      appName: appName
+    }),
+    meta: {
+      requiresAuth: true
+    }
+  }
 ]
 
 const router = new VueRouter({

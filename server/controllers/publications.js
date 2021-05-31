@@ -1,7 +1,7 @@
 import {validationResult} from 'express-validator';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import {Publisher} from '../models/publications.js';
+import {Publisher, Publication} from '../models/publications.js';
 import {registerUser, electAuthorship, revokeAuthorship} from './callContract.js';
 import multer from 'multer';
 import { User } from '../models/users.js';
@@ -78,7 +78,8 @@ export const getPublisher = async (req, res) => {
             res.status(200).send({publisher: publisher, chiefOfficer: chiefOfficer})
         }
         else if (role == 'Author') {
-            let publisher = await Publisher.find({'authors': userID})
+            let publisher = await Publisher.findOne({'authors': userID})
+            console.log("Publisher: ", publisher)
             let chiefOfficer = await User.findOne({'_id': publisher.chiefOfficer})
             res.status(200).send({publisher: publisher, chiefOfficer: chiefOfficer})
         }
@@ -117,14 +118,14 @@ export const acceptAuthorship = async (req, res) => {
         let publisherID = req.body.publisherID
         let newAuthor = req.body.publicKey
         let user = await User.findOneAndUpdate({'_id': userID}, {'role': "Author", 'hasPublisher': true})
-        var publisherObj = null
+        var publisherObj
         let publisher = await Publisher.findOne({'_id': publisherID}, function(err, obj) {
             publisherObj = obj
         })
         console.log(publisherObj)
         let chiefOfficer = await User.findOne({'_id': publisherObj.chiefOfficer})
-        let pendingAuthors = publisherObj.pendingAuthors.filter(() => {
-            return publisherObj.pendingAuthors != userID
+        let pendingAuthors = publisherObj.pendingAuthors.filter((author) => {
+            return author != userID
         })
         publisherObj.authors.push(userID)
         console.log(publisherObj.authors)
@@ -173,6 +174,7 @@ export const revokeAuthor = async (req, res) => {
         let author = await User.findOneAndUpdate({
             '_id': authorID
         }, {
+            'role': "Reader",
             'hasPublisher': false
         })
         await updatedPublisher.save()
@@ -189,5 +191,258 @@ export const revokeAuthor = async (req, res) => {
     catch (err) {
         console.log(err.message);
         res.status(500).send("Error in Fetching");
+    }
+}
+
+export const getPublishedList = async (req, res) => {
+    const errors = validationResult(req);
+    console.log(req.body)
+    if (!errors.isEmpty()) {
+        return res.status(400).json({errors: errors.array()});
+    };
+    try {
+        let publisherID = req.body.publisherID
+        console.log(publisherID)
+        let published = await Publication.find({
+            'status': 'Published',
+            'publisher': publisherID,
+            'revised': false
+        })
+        res.status(200).send({published: published})
+    }
+    catch (err) {
+        console.log(err.message);
+        res.status(500).send("Error in Fetching");
+    }
+}
+
+export const newDraft = async (req, res) => {
+    const errors = validationResult(req);
+    console.log(req.body)
+    if (!errors.isEmpty()) {
+        return res.status(400).json({errors: errors.array()});
+    };
+    try {
+        let authorID = req.body.authorID
+        let author = await User.findOne({'_id': authorID})
+        let publisher = req.body.publisherID
+        let title = req.body.title
+        let description = req.body.description
+        let topic = req.body.topic
+        let locations = req.body.locations
+        let tags = req.body.tags
+        let content = req.body.content
+        let publication = new Publication({
+            authors: [author],
+            publisher: publisher,
+            title: title,
+            description: description,
+            topic: topic,
+            locations: locations,
+            tags: tags,
+            article: content
+        })
+        console.log(content)
+        console.log(publication)
+        console.log(authorID)
+        await publication.save()
+        res.status(200).send({publication: publication})
+    }
+    catch (err) {
+        console.log(err.message);
+        res.status(500).send("Error in Saving");
+    }
+}
+
+export const getPublication = async (req, res) => {
+    const errors = validationResult(req);
+    console.log(req.body)
+    if (!errors.isEmpty()) {
+        return res.status(400).json({errors: errors.array()});
+    };
+    try {
+        let publicationID = req.body.publicationID
+        let publication = await Publication.find({'_id': publicationID})
+        console.log(publication)
+        res.status(200).send({publication: publication})
+    }
+    catch (err) {
+        console.log(err.message);
+        res.status(500).send("Error in Saving");
+    }
+}
+
+export const getDrafts = async (req, res) => {
+    const errors = validationResult(req);
+    console.log(req.body)
+    if (!errors.isEmpty()) {
+        return res.status(400).json({errors: errors.array()});
+    };
+    try {
+        let publisherID = req.body.publisherID
+        console.log(publisherID)
+        let drafts = await Publication.find({
+            'status': 'Draft',
+            'publisher': publisherID
+        })
+        console.log("YEET")
+        res.status(200).send({drafts: drafts})
+    }
+    catch (err) {
+        console.log(err.message);
+        res.status(500).send("Error in Saving");
+    }
+}
+
+export const editDraft = async (req, res) => {
+    const errors = validationResult(req);
+    console.log(req.body)
+    if (!errors.isEmpty()) {
+        return res.status(400).json({errors: errors.array()});
+    };
+    try {
+        let draftID = req.body.draftID
+        let authorID = req.body.authorID
+        let author = await User.findOne({'_id': authorID})
+        let title = req.body.title
+        let description = req.body.description
+        let topic = req.body.topic
+        let locations = req.body.locations
+        let tags = req.body.tags
+        let content = req.body.article
+        let authors = []
+        let currentAuthorsID = []
+        let publication = await Publication.findOne({'_id': draftID}, 
+            function(err, obj) {
+                authors = obj.authors
+                for (var i=0;i<authors.length;i++) {
+                    currentAuthorsID.push(authors[i]._id.toString())
+                }
+                console.log(currentAuthorsID)
+                console.log(authorID)
+                if(currentAuthorsID.includes(authorID)) {
+                    console.log("Author is already included")
+                }
+                else {
+                    console.log("Author is added")
+                    authors.push(author)
+                }
+            }
+        )
+        let publicationNew = await Publication.findOneAndUpdate({
+            '_id': draftID
+            },
+            {
+                authors: authors,
+                datePublished: Date.now(),
+                title: title,
+                description: description,
+                topic: topic,
+                locations: locations,
+                tags: tags,
+                article: content
+            }
+        )
+        console.log(publicationNew)
+        await publicationNew.save()
+        res.status(200).send({publication: publicationNew})
+    }
+    catch (err) {
+        console.log(err.message);
+        res.status(500).send("Error in Saving");
+    }
+}
+
+export const publishDraft = async (req, res) => {
+    const errors = validationResult(req);
+    console.log(req.body)
+    if (!errors.isEmpty()) {
+        return res.status(400).json({errors: errors.array()});
+    };
+    try {
+        let draft = req.body.draft
+        let draftID = req.body.draft._id
+        let approver = req.body.approver
+        let publication = await Publication.findOneAndUpdate({'_id': draftID}, {
+            'status': 'Published',
+            'datePublished': Date.now(),
+            'approver': approver
+        })
+        console.log("Draft to be published: ", publication)
+        await publication.save()
+        res.status(200).send({publication: publication})
+
+    }
+    catch (err) {
+        console.log(err.message);
+        res.status(500).send("Error in Saving");
+    }
+}
+
+export const newRevision = async (req, res) => {
+    const errors = validationResult(req);
+    console.log(req.body)
+    if (!errors.isEmpty()) {
+        return res.status(400).json({errors: errors.array()});
+    };
+    try {
+        let publicationID = req.body.publicationID
+        let authorID = req.body.authorID
+        let publisherID = req.body.publisherID
+        let prevVersions = req.body.prevVersions
+        prevVersions.push(publicationID)
+        let author = await User.findOne({'_id': authorID})
+        let title = req.body.title
+        let description = req.body.description
+        let topic = req.body.topic
+        let locations = req.body.locations
+        let tags = req.body.tags
+        let content = req.body.article
+        let authors = []
+        let currentAuthorsID = []
+        let publication = await Publication.findOne({'_id': publicationID}, 
+            function(err, obj) {
+                authors = obj.authors
+                for (var i=0;i<authors.length;i++) {
+                    currentAuthorsID.push(authors[i]._id.toString())
+                }
+                console.log(currentAuthorsID)
+                console.log(authorID)
+                if(currentAuthorsID.includes(authorID)) {
+                    console.log("Author is already included")
+                }
+                else {
+                    console.log("Author is added")
+                    authors.push(author)
+                }
+            }
+        )
+        let oldVersion = await Publication.findOneAndUpdate({
+            '_id': publicationID
+            },
+            {
+                revised: true
+            }
+        )
+        await oldVersion.save()
+        console.log("Previous Versions: ", prevVersions)
+        let revisedPublication = new Publication({
+            title: title,
+            description: description,
+            topic: topic,
+            locations: locations,
+            tags: tags,
+            article: content,
+            authors: authors,
+            publisher: publisherID,
+            status: 'Published',
+            prevVersions: prevVersions
+        })
+        await revisedPublication.save()
+        res.status(200).send({publication: revisedPublication})
+    }
+    catch (err) {
+        console.log(err.message);
+        res.status(500).send("Error in Saving");
     }
 }
