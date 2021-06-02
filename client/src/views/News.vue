@@ -1,5 +1,5 @@
 <template>
-    <div>
+  <div>
     <Nav :appName= "appName" />
     <b-card 
     style="max-width: 70rem;" 
@@ -7,8 +7,29 @@
     class="mt-5 ml-4">
       <small class="text-muted">Written by: {{getAuthors}} at {{news.datePublished}}</small> <br>
       <small class="text-muted">Topic: {{news.topic}}</small> <br>
+      <b-button id="flag-show" 
+      variant="primary" v-b-modal.flag-modal
+      class="mt-5">
+       Display Flag Submissions </b-button>
       <div class="mt-5" v-html="news.article"/>
     </b-card>
+    <b-modal id="flag-modal" title="Flag Submissions" hide-footer scrollable>
+      <router-link :to="{name: 'flag-submission', query: {id: news._id, flagIndex: news.flags.length}}">
+        <b-button class="mb-5" variant="primary">Submit new flag</b-button>
+      </router-link>
+      <b-list-group v-if="news.flags.length != 0">
+        <b-list-group-item v-for="flag in news.flags" :key="flag">
+          <b-row>
+            <b-col>
+              <h4 class="flag-subject">{{flag.subject}}</h4>
+              <p class="flag-flagger"> Submitted by: @{{flag.flaggerUsername}} </p>
+              <p class="flag-writeup"> {{flag.writeup}} </p>
+            </b-col>
+          </b-row>
+        </b-list-group-item>
+      </b-list-group>
+      <p v-else>No flags to display</p>
+    </b-modal>
   </div>
 </template>
 
@@ -64,4 +85,25 @@ export default {
 </script>
 
 <style>
+  .btn-primary {
+      background-color: orange;
+      border-color: orange;
+  }
+  
+  .btn-primary:hover {
+      background-color: rgb(236, 154, 2);
+      border-color: white;
+  }
+
+  .flag-subject {
+    font-size: 0.8rem;
+  }
+
+  .flag-writeup {
+    font-size: 0.7rem;
+  }
+
+  .flag-flagger {
+    font-size: 0.7rem;
+  }
 </style>

@@ -8,6 +8,8 @@ import { User } from '../models/users.js';
 
 const logoPath = '/uploads/logo'
 const logoPathSave = '../uploads/logo'
+const evidencePath = '/uploads/flagEvidence'
+const evidencePathSave = '../uploads/flagEvidence'
 
 export const registerPublisher = async (req, res) => {
     const errors = validationResult(req);
@@ -458,5 +460,48 @@ export const getNews = async (req, res) => {
     catch (err) {
         console.log(err.message);
         res.status(500).send("Error in Fetching");
+    }
+}
+
+export const submitFlag = async (req, res) => {
+    const errors = validationResult(req);
+    console.log(req.body)
+    if (!errors.isEmpty()) {
+        return res.status(400).json({errors: errors.array()});
+    };
+    try{
+        const publicationID = req.body.publicationID
+        const flagSubject = req.body.flagSubject;
+        const userID = req.body.userID;
+        const username = req.body.username;
+        const flagWriteup = req.body.flagWriteup;
+        let flags = []
+        let flagIndex = 0
+        let evidenceName = ""
+        let publicationFetch = await Publication.findOne({'_id': publicationID},
+            function (err, obj) {
+                flags = obj.flags
+                flagIndex = obj.flags.length
+                evidenceName = req.body.publicationID + "_" + req.body.userID + "_" +
+                req.body.flagIndex + "_" + req.body.filename
+            })
+        var newFlag = {
+            subject: flagSubject,
+            dateSubmitted: Date.now(),
+            status: "Pending",
+            flaggerID: userID,
+            flaggerUsername: username,
+            violationProof: evidencePath + "/" + evidenceName,
+            writeup: flagWriteup
+        }
+        flags.push(newFlag)
+        let publication = await Publication.findOneAndUpdate({'_id': publicationID},
+        {flags: flags})
+        await publication.save()
+        res.status(200).send({publication: publication})
+    }
+    catch (err) {
+        console.log(err.message);
+        res.status(500).send("Error in Saving");
     }
 }

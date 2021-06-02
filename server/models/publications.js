@@ -72,10 +72,11 @@ const PublicationSchema = mongoose.Schema({
     flags: [{
         subject: String,
         dateSubmitted: Date,
-        flagger: {
+        flaggerID: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User'
         },
+        flaggerUsername: String,
         status: String,
         writeup: String,
         violationProof: String,

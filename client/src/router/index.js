@@ -13,6 +13,7 @@ import Newsroom from '../views/Newsroom.vue'
 import NewDraft from '../views/NewDraft.vue'
 import EditDraft from '../views/EditDraft.vue'
 import NewRevision from '../views/NewRevision.vue'
+import FlagSubmission from '../views/FlagSubmission.vue'
 
 Vue.use(VueRouter)
 
@@ -134,6 +135,22 @@ const routes = [
     },
     props: route => ({
       publicationID: route.query.id,
+      appName: appName
+    }),
+    meta: {
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/flags/new',
+    name: 'flag-submission',
+    components: {
+      default: FlagSubmission,
+      nav: Nav
+    },
+    props: route => ({
+      publicationID: route.query.id,
+      flagIndex: route.query.flagIndex,
       appName: appName
     }),
     meta: {

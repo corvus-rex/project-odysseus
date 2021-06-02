@@ -2,7 +2,8 @@ import express from 'express';
 import {registerPublisher, getPublisher, 
     findPublisherByID, acceptAuthorship, revokeAuthor,
     newDraft, getPublication, getDrafts, editDraft, getPublishedList,
-    publishDraft, newRevision, getNews} from '../controllers/publications.js'
+    publishDraft, newRevision, getNews, submitFlag} from '../controllers/publications.js'
+import {uploadEvidence} from '../controllers/middleware.js'
 import {check} from 'express-validator';
 
 const router = express.Router();
@@ -22,5 +23,8 @@ router.post('/new-draft', [], newDraft)
 router.post('/get-publication', [], getPublication)
 router.post('/get-drafts', [], getDrafts)
 router.post('/edit-draft', [], editDraft)
+router.post('/submit-flag', 
+    uploadEvidence.fields([{name: 'flagEvidence', maxCount: 1}]),
+    submitFlag)
 
 export default router;
