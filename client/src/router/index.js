@@ -14,6 +14,8 @@ import NewDraft from '../views/NewDraft.vue'
 import EditDraft from '../views/EditDraft.vue'
 import NewRevision from '../views/NewRevision.vue'
 import FlagSubmission from '../views/FlagSubmission.vue'
+import RejectFlag from '../views/RejectFlag.vue'
+import ViewRejection from '../views/ViewRejection.vue'
 
 Vue.use(VueRouter)
 
@@ -135,6 +137,7 @@ const routes = [
     },
     props: route => ({
       publicationID: route.query.id,
+      flagID: route.query.flagID,
       appName: appName
     }),
     meta: {
@@ -153,6 +156,34 @@ const routes = [
       flagIndex: route.query.flagIndex,
       appName: appName
     }),
+    meta: {
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/flags/reject/:publicationID/:flagID',
+    name: 'reject-flag',
+    components: {
+      default: RejectFlag,
+      nav: Nav
+    },
+    props: {
+      appName: appName
+    },
+    meta: {
+      requiresAuth: true
+    }
+  },
+  {
+    path: '/flags/rejection/:publicationID/:flagID',
+    name: 'view-rejection',
+    components: {
+      default: ViewRejection,
+      nav: Nav
+    },
+    props: {
+      appName: appName
+    },
     meta: {
       requiresAuth: true
     }

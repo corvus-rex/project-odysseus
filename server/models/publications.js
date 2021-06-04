@@ -85,7 +85,10 @@ const PublicationSchema = mongoose.Schema({
         writeup: String,
         violationProof: String,
         counterFlag: {
-            dateSubmitted: Date,
+            dateSubmitted: {
+                type: Date,
+                default: Date.now()
+            },
             submitter: {
                 type: mongoose.Schema.Types.ObjectId,
                 ref: 'User'

@@ -505,3 +505,62 @@ export const submitFlag = async (req, res) => {
         res.status(500).send("Error in Saving");
     }
 }
+
+export const getFlag = async (req, res) => {
+    const errors = validationResult(req);
+    console.log(req.body)
+    if (!errors.isEmpty()) {
+        return res.status(400).json({errors: errors.array()});
+    };
+    try{
+        const publicationID = req.body.publicationID
+        const flagID = req.body.flagID;
+        var flag = {}
+        let publication = await Publication.findOne({
+            '_id': publicationID, 
+            'flags._id': flagID
+        }, function (err, obj) {
+            flag = obj.flags[0]
+        })
+        console.log(flag)
+        res.status(200).send({flag: flag})
+    }
+    catch (err) {
+        console.log(err.message);
+        res.status(500).send("Error in Saving");
+    }
+}
+
+export const submitCounterFlag = async (req, res) => {
+    const errors = validationResult(req);
+    console.log(req.body)
+    if (!errors.isEmpty()) {
+        return res.status(400).json({errors: errors.array()});
+    };
+    try{
+        const publicationID = req.body.publicationID
+        const userID = req.body.userID;
+        const flagID = req.body.flagID;
+        const counterFlagWriteup = req.body.counterFlagWriteup;
+        var counterFlag = {}
+        let publication = await Publication.findOneAndUpdate({
+            '_id': publicationID,
+            'flags._id': flagID
+        },
+        {
+            'flags.$.status': "Rejected",
+            'flags.$.counterFlag.submitter': userID,
+            'flags.$.counterFlag.writeup': counterFlagWriteup,
+            'flags.$.counterFlag.dateSubmitted': Date.now()
+        },
+        function (err, obj) {
+            counterFlag = obj.flags[0].counterFlag
+        })
+        await publication.save()
+        res.status(200).send({counterFlag: counterFlag})
+    }
+    catch (err) {
+        console.log(err.message);
+        res.status(500).send("Error in Saving");
+    }
+}
