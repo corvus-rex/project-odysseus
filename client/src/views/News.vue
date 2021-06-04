@@ -23,6 +23,10 @@
             <b-col>
               <h4 class="flag-subject">{{flag.subject}}</h4>
               <p class="flag-flagger"> Submitted by: @{{flag.flaggerUsername}} </p>
+              <p class="flag-status"> Status: 
+                <span :style="getStatusColor(flag)"> 
+                  {{getStatus(flag)}}
+                </span>
               <p class="flag-writeup"> {{flag.writeup}} </p>
             </b-col>
           </b-row>
@@ -76,6 +80,38 @@ export default {
           this.news = res.data.publication[0]
         console.log(this.news)
         })
+      },
+      getStatusColor(flag) {
+        var now = Date.now().valueOf()
+        var timeDiff = (now - Date.parse(flag.dateSubmitted)) / 1000
+        if (flag.status == "Accepted") {
+          return "color: green;"
+        }
+        else if (flag.status == "Rejected") {
+          return "color: yellow"
+        }
+        else if (timeDiff < flag.expirySeconds) {
+          return "color: orange"
+        }
+        else {
+          return "color: red"
+        }
+      },
+      getStatus(flag) {
+        var now = Date.now().valueOf()
+        var timeDiff = (now - Date.parse(flag.dateSubmitted)) / 1000
+        if (flag.status == "Accepted") {
+          return "Accepted"
+        }
+        else if (flag.status == "Rejected") {
+          return "Rejected"
+        }
+        else if (timeDiff < flag.expirySeconds) {
+          return "Pending"
+        }
+        else {
+          return "Ignored"
+        }
       }
     },
     created: async function() {
@@ -104,6 +140,9 @@ export default {
   }
 
   .flag-flagger {
+    font-size: 0.7rem;
+  }
+  .flag-status {
     font-size: 0.7rem;
   }
 </style>

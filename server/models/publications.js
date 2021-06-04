@@ -72,6 +72,10 @@ const PublicationSchema = mongoose.Schema({
     flags: [{
         subject: String,
         dateSubmitted: Date,
+        expirySeconds: {
+            type: Number,
+            default: 7200
+        },
         flaggerID: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User'
