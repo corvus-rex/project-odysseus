@@ -18,6 +18,9 @@ const serverSide = {
     getDrafts: url + 'publisher/get-drafts',
     newDraft: url + 'publisher/new-draft',
     editDraft: url + 'publisher/edit-draft',
+    getFlag: url + 'publisher/get-flag',
+    submitFlag: url + 'publisher/submit-flag',
+    submitCounterFlag: url + 'publisher/submit-counterflag',
     getNotifs: url + 'notif/get-notifs',
     changeNotifStatus: url + 'notif/change-status',
 };

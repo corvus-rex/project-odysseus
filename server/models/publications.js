@@ -40,6 +40,10 @@ const PublicationSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Publication'
     }],
+    flagger: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
     topic: String,
     tags: [String],
     locations: [String],
@@ -72,15 +76,23 @@ const PublicationSchema = mongoose.Schema({
     flags: [{
         subject: String,
         dateSubmitted: Date,
-        flagger: {
+        expirySeconds: {
+            type: Number,
+            default: 7200
+        },
+        flaggerID: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User'
         },
+        flaggerUsername: String,
         status: String,
         writeup: String,
         violationProof: String,
         counterFlag: {
-            dateSubmitted: Date,
+            dateSubmitted: {
+                type: Date,
+                default: Date.now()
+            },
             submitter: {
                 type: mongoose.Schema.Types.ObjectId,
                 ref: 'User'

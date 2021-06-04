@@ -8,6 +8,8 @@ import { User } from '../models/users.js';
 
 const logoPath = '/uploads/logo'
 const logoPathSave = '../uploads/logo'
+const evidencePath = '/uploads/flagEvidence'
+const evidencePathSave = '../uploads/flagEvidence'
 
 export const registerPublisher = async (req, res) => {
     const errors = validationResult(req);
@@ -398,6 +400,8 @@ export const newRevision = async (req, res) => {
         let locations = req.body.locations
         let tags = req.body.tags
         let content = req.body.article
+        let flaggerID = req.body.flaggerID
+        let flagID = req.body.flagID
         let authors = []
         let currentAuthorsID = []
         let publication = await Publication.findOne({'_id': publicationID}, 
@@ -426,18 +430,48 @@ export const newRevision = async (req, res) => {
         )
         await oldVersion.save()
         console.log("Previous Versions: ", prevVersions)
-        let revisedPublication = new Publication({
-            title: title,
-            description: description,
-            topic: topic,
-            locations: locations,
-            tags: tags,
-            article: content,
-            authors: authors,
-            publisher: publisherID,
-            status: 'Published',
-            prevVersions: prevVersions
-        })
+        var revisedPublication 
+        if (flaggerID != null) {
+            var flag = await Publication.findOneAndUpdate({'flags._id': flagID}, {
+                'flags.$.status': "Accepted"
+            })
+            await flag.save()
+            var flags = {}
+            let newPublication = await Publication.findOne({
+                '_id': publicationID
+            },
+            function(err, obj) {
+                flags = obj.flags
+            })
+            revisedPublication = new Publication({
+                title: title,
+                description: description,
+                topic: topic,
+                locations: locations,
+                tags: tags,
+                article: content,
+                authors: authors,
+                publisher: publisherID,
+                status: 'Published',
+                prevVersions: prevVersions,
+                flagger: flaggerID,
+                flags: flags
+            })
+        }
+        else {
+            revisedPublication = new Publication({
+                title: title,
+                description: description,
+                topic: topic,
+                locations: locations,
+                tags: tags,
+                article: content,
+                authors: authors,
+                publisher: publisherID,
+                status: 'Published',
+                prevVersions: prevVersions
+            })
+        }
         await revisedPublication.save()
         res.status(200).send({publication: revisedPublication})
     }
@@ -458,5 +492,106 @@ export const getNews = async (req, res) => {
     catch (err) {
         console.log(err.message);
         res.status(500).send("Error in Fetching");
+    }
+}
+
+export const submitFlag = async (req, res) => {
+    const errors = validationResult(req);
+    console.log(req.body)
+    if (!errors.isEmpty()) {
+        return res.status(400).json({errors: errors.array()});
+    };
+    try{
+        const publicationID = req.body.publicationID
+        const flagSubject = req.body.flagSubject;
+        const userID = req.body.userID;
+        const username = req.body.username;
+        const flagWriteup = req.body.flagWriteup;
+        let flags = []
+        let flagIndex = 0
+        let evidenceName = ""
+        let publicationFetch = await Publication.findOne({'_id': publicationID},
+            function (err, obj) {
+                flags = obj.flags
+                flagIndex = obj.flags.length
+                evidenceName = req.body.publicationID + "_" + req.body.userID + "_" +
+                req.body.flagIndex + "_" + req.body.filename
+            })
+        var newFlag = {
+            subject: flagSubject,
+            dateSubmitted: Date.now(),
+            status: "Pending",
+            flaggerID: userID,
+            flaggerUsername: username,
+            violationProof: evidencePath + "/" + evidenceName,
+            writeup: flagWriteup
+        }
+        flags.push(newFlag)
+        let publication = await Publication.findOneAndUpdate({'_id': publicationID},
+        {flags: flags})
+        await publication.save()
+        res.status(200).send({publication: publication})
+    }
+    catch (err) {
+        console.log(err.message);
+        res.status(500).send("Error in Saving");
+    }
+}
+
+export const getFlag = async (req, res) => {
+    const errors = validationResult(req);
+    console.log(req.body)
+    if (!errors.isEmpty()) {
+        return res.status(400).json({errors: errors.array()});
+    };
+    try{
+        const flagID = req.body.flagID;
+        var flag = {}
+        let publication = await Publication.findOne({
+            'flags._id': flagID}, 
+            {
+                flags: {
+                    $elemMatch: {'_id': flagID}
+                }
+            },
+            function(err, obj) {
+                flag = obj.flags[0]
+            })
+        console.log("Flag", flag)
+        res.status(200).send({flag: flag})
+    }
+    catch (err) {
+        console.log(err.message);
+        res.status(500).send("Error in Saving");
+    }
+}
+
+export const submitCounterFlag = async (req, res) => {
+    const errors = validationResult(req);
+    console.log(req.body)
+    if (!errors.isEmpty()) {
+        return res.status(400).json({errors: errors.array()});
+    };
+    try{
+        const publicationID = req.body.publicationID
+        const userID = req.body.userID;
+        const flagID = req.body.flagID;
+        const counterFlagWriteup = req.body.counterFlagWriteup;
+        let publication = await Publication.findOneAndUpdate({
+            '_id': publicationID,
+            'flags._id': flagID
+        },
+        {
+            'flags.$.status': "Rejected",
+            'flags.$.counterFlag.submitter': userID,
+            'flags.$.counterFlag.writeup': counterFlagWriteup,
+            'flags.$.counterFlag.dateSubmitted': Date.now()
+        })
+        await publication.save()
+        res.status(200)
+    }
+    catch (err) {
+        console.log(err.message);
+        res.status(500).send("Error in Saving");
     }
 }
