@@ -98,7 +98,6 @@ export default {
         },
         getFlag() {
           axios.post(serverSide.getFlag, {
-            publicationID: this.publication._id,
             flagID: this.$route.params.flagID
           })
           .then((res) => {
@@ -121,8 +120,7 @@ export default {
               flagID: this.flag._id,
               counterFlagWriteup: this.counterFlagWriteup
             })
-            .then((res) => {
-              console.log(res.data.counterflag)
+            .then(() => {
               this.$router.push({name: "news", query:{id: this.publication._id}})
             })
             .catch(function (error) {

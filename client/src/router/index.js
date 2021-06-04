@@ -137,7 +137,7 @@ const routes = [
     },
     props: route => ({
       publicationID: route.query.id,
-      flagID: route.query.flagID,
+      flaggerID: route.query.flaggerID,
       appName: appName
     }),
     meta: {

@@ -40,6 +40,10 @@ const PublicationSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Publication'
     }],
+    flagger: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
     topic: String,
     tags: [String],
     locations: [String],

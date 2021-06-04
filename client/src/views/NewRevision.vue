@@ -15,6 +15,14 @@
             class="mt-3"
           ></b-form-input>
         </b-form-group>
+        <b-form-group label="This Revision is Flagged By" label-for="flagger-username">
+          <b-form-input
+            id="flagger-username"
+            v-model="flagger.username"
+            readonly
+            class="mt-3"
+          ></b-form-input>
+        </b-form-group>
         <b-form-group label= "Article Description" label-for="description-input">
           <b-form-textarea
             id="description-input"
@@ -101,6 +109,9 @@ export default {
             newsTags: [],
             newsLocations: [],
             news: null,
+            flag: {},
+            hasFlagger: false,
+            flagger: {},
             editorOption: {
               'theme': 'snow',
               'scrollingContainer': 'div.ql-container.ql-snow'
@@ -128,6 +139,21 @@ export default {
       onEditorChange({ quill, html, text }) {
         console.log('editor change!', quill, html, text)
         // this.news = html
+      },
+      getFlag() {
+          axios.post(serverSide.getFlag, {flagID: this.$route.query.flagID})
+          .then((res) => {
+              this.flag = res.data.flag
+              console.log("Has Flagger", this.flag)
+              this.getFlagger()
+          })
+      },
+      getFlagger() {
+          axios.post(serverSide.findUserByID, {userID: this.flag.flaggerID})
+          .then((res) => {
+              this.flagger = res.data.user
+              this.getPublisher()
+          })
       },
       getPublisher() {
           axios.post(serverSide.getPublisher, {userID: this.author._id, userRole: this.author.role})
@@ -167,7 +193,9 @@ export default {
           topic: this.newsTopic,
           tags: this.newsTags,
           locations: this.newsLocations,
-          article: this.news
+          article: this.news,
+          flagID: this.flag._id,
+          flaggerID: this.flagger._id
         })
         .then((res) => {
           console.log(res.data.publication)
@@ -189,7 +217,8 @@ export default {
           var stringifiedPublication = JSON.stringify(toBeHashed)
           var hashedArticle = sha256.create()
           hashedArticle.update(stringifiedPublication)
-          newRevision(authorsKey, res.data.publication._id, hashedArticle.hex(), this.publicationID, address)
+          newRevision(authorsKey, res.data.publication._id, hashedArticle.hex(), 
+          this.publicationID, address)
           this.$router.push({name: "newsroom"})
         })
       },
@@ -201,7 +230,12 @@ export default {
         var user = localStorage.getItem('user')
         var userParsed = JSON.parse(user)
         this.author = userParsed
-        await this.getPublisher()
+        if (this.$route.query.flagID != null) {
+          await this.getFlag()
+        }
+        else {
+          await this.getPublisher()
+        }
     }
 }
 </script>

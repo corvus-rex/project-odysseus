@@ -400,6 +400,8 @@ export const newRevision = async (req, res) => {
         let locations = req.body.locations
         let tags = req.body.tags
         let content = req.body.article
+        let flaggerID = req.body.flaggerID
+        let flagID = req.body.flagID
         let authors = []
         let currentAuthorsID = []
         let publication = await Publication.findOne({'_id': publicationID}, 
@@ -428,18 +430,48 @@ export const newRevision = async (req, res) => {
         )
         await oldVersion.save()
         console.log("Previous Versions: ", prevVersions)
-        let revisedPublication = new Publication({
-            title: title,
-            description: description,
-            topic: topic,
-            locations: locations,
-            tags: tags,
-            article: content,
-            authors: authors,
-            publisher: publisherID,
-            status: 'Published',
-            prevVersions: prevVersions
-        })
+        var revisedPublication 
+        if (flaggerID != null) {
+            var flag = await Publication.findOneAndUpdate({'flags._id': flagID}, {
+                'flags.$.status': "Accepted"
+            })
+            await flag.save()
+            var flags = {}
+            let newPublication = await Publication.findOne({
+                '_id': publicationID
+            },
+            function(err, obj) {
+                flags = obj.flags
+            })
+            revisedPublication = new Publication({
+                title: title,
+                description: description,
+                topic: topic,
+                locations: locations,
+                tags: tags,
+                article: content,
+                authors: authors,
+                publisher: publisherID,
+                status: 'Published',
+                prevVersions: prevVersions,
+                flagger: flaggerID,
+                flags: flags
+            })
+        }
+        else {
+            revisedPublication = new Publication({
+                title: title,
+                description: description,
+                topic: topic,
+                locations: locations,
+                tags: tags,
+                article: content,
+                authors: authors,
+                publisher: publisherID,
+                status: 'Published',
+                prevVersions: prevVersions
+            })
+        }
         await revisedPublication.save()
         res.status(200).send({publication: revisedPublication})
     }
@@ -513,16 +545,19 @@ export const getFlag = async (req, res) => {
         return res.status(400).json({errors: errors.array()});
     };
     try{
-        const publicationID = req.body.publicationID
         const flagID = req.body.flagID;
         var flag = {}
         let publication = await Publication.findOne({
-            '_id': publicationID, 
-            'flags._id': flagID
-        }, function (err, obj) {
-            flag = obj.flags[0]
-        })
-        console.log(flag)
+            'flags._id': flagID}, 
+            {
+                flags: {
+                    $elemMatch: {'_id': flagID}
+                }
+            },
+            function(err, obj) {
+                flag = obj.flags[0]
+            })
+        console.log("Flag", flag)
         res.status(200).send({flag: flag})
     }
     catch (err) {
@@ -542,7 +577,6 @@ export const submitCounterFlag = async (req, res) => {
         const userID = req.body.userID;
         const flagID = req.body.flagID;
         const counterFlagWriteup = req.body.counterFlagWriteup;
-        var counterFlag = {}
         let publication = await Publication.findOneAndUpdate({
             '_id': publicationID,
             'flags._id': flagID
@@ -552,12 +586,9 @@ export const submitCounterFlag = async (req, res) => {
             'flags.$.counterFlag.submitter': userID,
             'flags.$.counterFlag.writeup': counterFlagWriteup,
             'flags.$.counterFlag.dateSubmitted': Date.now()
-        },
-        function (err, obj) {
-            counterFlag = obj.flags[0].counterFlag
         })
         await publication.save()
-        res.status(200).send({counterFlag: counterFlag})
+        res.status(200)
     }
     catch (err) {
         console.log(err.message);

@@ -38,15 +38,16 @@
             <router-link 
             :to="{name: 'reject-flag', params: {
               publicationID: news._id, flagID: flag._id}}" 
-            class="btn btn-danger stretched-link">
-            Reject</router-link>
-            <b-button variant="success" class="ml-2">Accept</b-button>
+            class="btn btn-danger">Reject</router-link>
+            <router-link
+            :to="{name: 'new-revision', query: {id: news._id, flagID: flag._id}}"
+            class="btn btn-success">Accept</router-link>
           </div>
           <div v-if="flag.status === 'Rejected'">
             <router-link
             :to="{name: 'view-rejection', params: {
               publicationID: news._id, flagID: flag._id}}" 
-            class="btn btn-primary stretched-link">
+            class="btn btn-primary">
             View Rejection</router-link>
           </div>
         </b-list-group-item>
