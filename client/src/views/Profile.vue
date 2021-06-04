@@ -64,7 +64,7 @@
                     <h4 class="panel-group">Authors: <a href="#" @click="$bvModal.show('authors-modal')">{{this.publisher.authors.length}}</a></h4>
                     <h4 class="panel-group">Pending Authors: {{this.publisher.pendingAuthors.length}}</h4>
                     <b-button v-b-modal.inviteauth-modal id="invite-auth" 
-                    variant="primary"> Invite New Authors </b-button>
+                    variant="primary" v-if="isChief"> Invite New Authors </b-button>
                     <b-list-group class="mt-3">
                         <b-list-group-item v-for="email in authEmails" :key="email">
                             <b-container>
@@ -112,6 +112,7 @@
                         <b-col>
                             <b-button class="revoke-button" 
                             variant="danger" 
+                            v-if="isChief"
                             @click="revokeAuthor(author.id, author.publicKey, publisher._id)">Revoke Authorship</b-button>
                         </b-col>
                     </b-row>
@@ -146,6 +147,7 @@ export default {
             publisher: {},
             authors: [],
             chiefOfficer: null,
+            isChief: false,
             authEmailsInput: [],
             authEmails: []
         }
@@ -180,6 +182,12 @@ export default {
                 this.publisher = res.data.publisher
                 this.chiefOfficer = res.data.chiefOfficer
                 console.log(this.publisher)
+                if (this.id === this.chiefOfficer._id) {
+                    this.isChief = true
+                }
+                else {
+                    this.isChief = false
+                }
                 this.getAuthorsData()
             })
         },
