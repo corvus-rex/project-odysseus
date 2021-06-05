@@ -64,14 +64,15 @@ const PublicationSchema = mongoose.Schema({
     article: String,
     rep: {
         type: Number,
-        default: 0
+        default: 1
     },
-    backers: [{
-        backerID: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'User'
-        },
-        amount: Number
+    upvoted: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }],
+    downvoted: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
     }],
     flags: [{
         subject: String,

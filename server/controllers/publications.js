@@ -365,13 +365,17 @@ export const publishDraft = async (req, res) => {
         let draft = req.body.draft
         let draftID = req.body.draft._id
         let approver = req.body.approver
+        let authors = []
         let publication = await Publication.findOneAndUpdate({'_id': draftID}, {
             'status': 'Published',
             'datePublished': Date.now(),
             'approver': approver
+        }, function(err, obj) {
+            authors = obj.authors
         })
         console.log("Draft to be published: ", publication)
         await publication.save()
+        await User.updateMany({'_id': {$in: authors}}, {$inc: {'rep': 1}})
         res.status(200).send({publication: publication})
 
     }
@@ -473,6 +477,7 @@ export const newRevision = async (req, res) => {
             })
         }
         await revisedPublication.save()
+        await User.updateMany({'_id': authorID}, {$inc: {'rep': 1}})
         res.status(200).send({publication: revisedPublication})
     }
     catch (err) {
