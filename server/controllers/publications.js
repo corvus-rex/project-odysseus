@@ -376,6 +376,7 @@ export const publishDraft = async (req, res) => {
         console.log("Draft to be published: ", publication)
         await publication.save()
         await User.updateMany({'_id': {$in: authors}}, {$inc: {'rep': 1}})
+        await Publisher.updateMany({'_id': publication.publisher}, {$inc: {'rep': 1}})
         res.status(200).send({publication: publication})
 
     }
@@ -478,6 +479,7 @@ export const newRevision = async (req, res) => {
         }
         await revisedPublication.save()
         await User.updateMany({'_id': authorID}, {$inc: {'rep': 1}})
+        await Publisher.updateMany({'_id': publisherID}, {$inc: {'rep': 1}})
         res.status(200).send({publication: revisedPublication})
     }
     catch (err) {
@@ -621,6 +623,8 @@ export const castVote = async (req, res) => {
             })
             console.log(publication)
             await publication.save()
+            await User.updateMany({'_id': {$in: publication.authors}}, {$inc: {'rep': votingPower}})
+            await Publisher.updateMany({'_id': publication.publisher}, {$inc: {'rep': votingPower}})
             res.status(200).send({publication: publication})
         }
         else if (votingPower > 0) {
@@ -633,6 +637,8 @@ export const castVote = async (req, res) => {
             })
             console.log(publication)
             await publication.save()
+            await User.updateMany({'_id': {$in: publication.authors}}, {$inc: {'rep': votingPower}})
+            await Publisher.updateMany({'_id': publication.publisher}, {$inc: {'rep': votingPower}})
             res.status(200).send({publication: publication})
         }
         else {

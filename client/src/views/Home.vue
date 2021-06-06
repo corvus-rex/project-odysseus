@@ -128,7 +128,7 @@ export default {
               this.votingList[news._id].upvoted = true
               alert("Vote Casted")
               console.log("Voting List: ", this.votingList[news._id])
-              return
+              this.$router.go()
             })
           }
           else if (this.user.rep < 10) {
@@ -143,7 +143,7 @@ export default {
               this.votingList[news._id].upvoted = true
               alert("Vote Casted")
               console.log("Voting List: ", this.votingList[news._id])
-              return
+              this.$router.go()
             })
           }
         })
@@ -183,11 +183,11 @@ export default {
               publicationID: news._id
             })
             .then(() => {
-              this.votingList[news._id].rep -= votingPower
+              this.votingList[news._id].rep += votingPower
               this.votingList[news._id].downvoted = true
               alert("Vote Casted")
               console.log("Voting List: ", this.votingList[news._id])
-              return
+              this.$router.go()
             })
           }
           else if (this.user.rep < 10) {
@@ -198,11 +198,11 @@ export default {
               publicationID: news._id
             })
             .then(() => {
-              this.votingList[news._id].rep -= votingPower
+              this.votingList[news._id].rep += votingPower
               this.votingList[news._id].downvoted = true
               alert("Vote Casted")
               console.log("Voting List: ", this.votingList[news._id])
-              return
+              this.$router.go()
             })
           }
         })
