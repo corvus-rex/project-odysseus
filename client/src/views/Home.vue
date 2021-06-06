@@ -19,11 +19,15 @@
         </b-card-body>
         <b-card-body class="vote-bar">
             <div class="vote-bar-content">
-              <b-icon icon="chevron-up"
-              @click="upvote(news)" variant="warning"></b-icon>
-              <span class="vote"> {{news.rep}} </span>
-              <b-icon icon="chevron-down"
-              @click="downvote(news)" :variant="{primary: votingList[news._id].downvoted}"></b-icon>
+              <button class="vote-btn" @click="upvote(news)">
+                <b-icon icon="chevron-up" 
+                :variant="upvoteVariant(news)"></b-icon>
+              </button>
+              <span class="vote"> {{votingList[news._id].rep}} </span>
+              <button class="vote-btn" @click="downvote(news)" >
+                <b-icon icon="chevron-down"
+                :variant="downvoteVariant(news)"></b-icon>
+              </button>
             </div>
         </b-card-body>
           <template #footer>
@@ -48,7 +52,7 @@ export default {
       appName: appName,
       user: {},
       newsList: [],
-      votingList: {}
+      votingList: {},
     }
   },
   components: {
@@ -68,9 +72,11 @@ export default {
         this.votingList[news._id] = {
           "rep": news.rep,
           "upvoted": this.isUpvoted(news),
-          "downvoted": this.isDownvoted(news)
+          "downvoted": this.isDownvoted(news),
+          "isAuthors": true
         }
       });
+      console.log(this.votingList)
     },
     isUpvoted(news) {
       try {
@@ -88,10 +94,150 @@ export default {
         return false
       }
     },
+    async upvote(news) {
+      await this.isAuthors(news)
+      if (this.user != null) {
+        axios.post(serverSide.findUserByID, {userID: this.user._id})
+        .then((res) => {
+          this.user.rep = res.data.user.rep
+          if (this.votingList[news._id].upvoted == true) {
+            alert('You have already voted!')
+            return
+          }
+          else if (this.votingList[news._id].downvoted == true) {
+            alert('You have already voted!')
+            return
+          }
+          else if (this.votingList[news._id].isAuthors == true) {
+            alert('Authors of the same publisher is not allowed to vote this news!')
+            return
+          }
+          else if (this.user.rep <= 0) {
+            alert('Your reputation score is not enough to vote!')
+            return
+          }
+          else if (this.user.rep > 10) {
+            let votingPower = 10
+            axios.post(serverSide.castVote, {
+              voterID: this.user._id,
+              votingPower: votingPower,
+              publicationID: news._id
+            })
+            .then(() => {
+              this.votingList[news._id].rep += votingPower
+              this.votingList[news._id].upvoted = true
+              alert("Vote Casted")
+              console.log("Voting List: ", this.votingList[news._id])
+              return
+            })
+          }
+          else if (this.user.rep < 10) {
+            let votingPower = this.user.rep
+            axios.post(serverSide.castVote, {
+              voterID: this.user._id,
+              votingPower: votingPower,
+              publicationID: news._id
+            })
+            .then(() => {
+              this.votingList[news._id].rep += votingPower
+              this.votingList[news._id].upvoted = true
+              alert("Vote Casted")
+              console.log("Voting List: ", this.votingList[news._id])
+              return
+            })
+          }
+        })
+      }
+      else {
+        this.$router.push({name: 'login'})
+      }
+
+    },
+    async downvote(news) {
+      if (this.user != null) {
+        await this.isAuthors(news)
+        axios.post(serverSide.findUserByID, {userID: this.user._id})
+        .then((res) => {
+          this.user.rep = res.data.user.rep
+          if (this.votingList[news._id].upvoted == true) {
+            alert('You have already voted!')
+            return
+          }
+          else if (this.votingList[news._id].downvoted == true) {
+            alert('You have already voted!')
+            return
+          }
+          else if (this.votingList[news._id].isAuthors == true) {
+            alert('Authors of the same publisher is not allowed to vote this news!')
+            return
+          }
+          else if (this.user.rep < 0) {
+            alert('Your reputation score is not enough to vote!')
+            return
+          }
+          else if (this.user.rep > 10) {
+            var votingPower = -10
+            axios.post(serverSide.castVote, {
+              voterID: this.user._id,
+              votingPower: votingPower,
+              publicationID: news._id
+            })
+            .then(() => {
+              this.votingList[news._id].rep -= votingPower
+              this.votingList[news._id].downvoted = true
+              alert("Vote Casted")
+              console.log("Voting List: ", this.votingList[news._id])
+              return
+            })
+          }
+          else if (this.user.rep < 10) {
+            let votingPower = -this.user.rep
+            axios.post(serverSide.castVote, {
+              voterID: this.user._id,
+              votingPower: votingPower,
+              publicationID: news._id
+            })
+            .then(() => {
+              this.votingList[news._id].rep -= votingPower
+              this.votingList[news._id].downvoted = true
+              alert("Vote Casted")
+              console.log("Voting List: ", this.votingList[news._id])
+              return
+            })
+          }
+        })
+      }
+      else {
+        this.$router.push({name: 'login'})
+      }
+    },
+    async isAuthors(news) {
+      if (this.user.hasPublisher == true) {
+        await axios.post(serverSide.getPublisher, {
+          userID: this.user._id, userRole: this.user.role
+        })
+        .then((res) => {
+          console.log("Your News Publisher: ", res.data.publisher._id)
+          console.log("Their News Publisher: ", news.publisher)
+            if (news.publisher == res.data.publisher._id) {
+              console.log("Same publishers")
+              this.votingList[news._id].isAuthors = true
+              console.log(this.votingList[news._id])
+            }
+            else {
+              console.log("Different publishers")
+              this.votingList[news._id].isAuthors = false
+            }
+          return
+        })
+      }
+      else {
+        this.votingList[news._id].isAuthors = false
+      }
+    },
     getAuthors(authors) {
       var authorString = ''
       var idx = 0
-      console.log(authors)
       for (var i = 0; i < authors.length; i++) {
           authorString += authors[i].firstName
           authorString += " "
@@ -103,6 +249,22 @@ export default {
       }
       return authorString
     },
+    upvoteVariant(news) {
+      if (this.votingList[news._id].upvoted) {
+        return 'warning'
+      }
+      else {
+        return ''
+      }
+    },
+    downvoteVariant(news) {
+      if (this.votingList[news._id].downvoted) {
+        return 'primary'
+      }
+      else {
+        return ''
+      }
+    }
   },
   created: async function(){
     try {
@@ -153,5 +315,11 @@ export default {
     border-top: none;
     position: relative;
     z-index: 2;
+  }
+  svg {
+    pointer-events: all;
+  }
+  .vote-btn {
+    border-style: none;
   }
 </style>

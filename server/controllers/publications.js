@@ -600,3 +600,47 @@ export const submitCounterFlag = async (req, res) => {
         res.status(500).send("Error in Saving");
     }
 }
+
+export const castVote = async (req, res) => {
+    const errors = validationResult(req);
+    console.log(req.body)
+    if (!errors.isEmpty()) {
+        return res.status(400).json({errors: errors.array()});
+    };
+    try {
+        const voterID = req.body.voterID
+        const votingPower = req.body.votingPower
+        const publicationID = req.body.publicationID
+        if (votingPower < 0) {
+            let publication = await Publication.findOneAndUpdate({
+                '_id': publicationID
+            }, 
+            {
+                $inc: {'rep': votingPower},
+                $push: {'downvoted': voterID}
+            })
+            console.log(publication)
+            await publication.save()
+            res.status(200).send({publication: publication})
+        }
+        else if (votingPower > 0) {
+            let publication = await Publication.findOneAndUpdate({
+                '_id': publicationID
+            }, 
+            {
+                $inc: {'rep': votingPower},
+                $push: {'upvoted': voterID}
+            })
+            console.log(publication)
+            await publication.save()
+            res.status(200).send({publication: publication})
+        }
+        else {
+            res.status(500).send("Not enough rep to vote!");
+        }
+    }
+    catch(err) {
+        console.log(err.message);
+        res.status(500).send("Error in Saving");
+    }
+}

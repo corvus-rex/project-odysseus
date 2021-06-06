@@ -3,7 +3,7 @@ import {registerPublisher, getPublisher,
     findPublisherByID, acceptAuthorship, revokeAuthor,
     newDraft, getPublication, getDrafts, editDraft, getPublishedList,
     publishDraft, newRevision, getNews, submitFlag, 
-    getFlag, submitCounterFlag} from '../controllers/publications.js'
+    getFlag, submitCounterFlag, castVote} from '../controllers/publications.js'
 import {uploadEvidence} from '../controllers/middleware.js'
 import {check} from 'express-validator';
 
@@ -29,5 +29,6 @@ router.post('/submit-flag',
     uploadEvidence.fields([{name: 'flagEvidence', maxCount: 1}]),
     submitFlag)
 router.post('/submit-counterflag', submitCounterFlag)
+router.post('/cast-vote', castVote)
 
 export default router;
