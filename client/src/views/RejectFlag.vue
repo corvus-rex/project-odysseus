@@ -120,7 +120,8 @@ export default {
               flagID: this.flag._id,
               counterFlagWriteup: this.counterFlagWriteup
             })
-            .then(() => {
+            .then((res) => {
+              console.log(res.data.publication)
               this.$router.push({name: "news", query:{id: this.publication._id}})
             })
             .catch(function (error) {

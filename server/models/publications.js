@@ -102,7 +102,15 @@ const PublicationSchema = mongoose.Schema({
             rep: {
                 type: Number,
                 default: 0
-            }
+            },
+            upvoted: [{
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'User'
+            }],
+            downvoted: [{
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'User'
+            }],
         }
     }]
 });

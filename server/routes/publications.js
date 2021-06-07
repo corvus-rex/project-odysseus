@@ -3,7 +3,7 @@ import {registerPublisher, getPublisher,
     findPublisherByID, acceptAuthorship, revokeAuthor,
     newDraft, getPublication, getDrafts, editDraft, getPublishedList,
     publishDraft, newRevision, getNews, submitFlag, 
-    getFlag, submitCounterFlag, castVote} from '../controllers/publications.js'
+    getFlag, submitCounterFlag, castVote, castVoteCF} from '../controllers/publications.js'
 import {uploadEvidence} from '../controllers/middleware.js'
 import {check} from 'express-validator';
 
@@ -30,5 +30,6 @@ router.post('/submit-flag',
     submitFlag)
 router.post('/submit-counterflag', submitCounterFlag)
 router.post('/cast-vote', castVote)
+router.post('/cast-vote-cf', castVoteCF)
 
 export default router;

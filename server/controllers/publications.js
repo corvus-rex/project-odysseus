@@ -595,7 +595,7 @@ export const submitCounterFlag = async (req, res) => {
             'flags.$.counterFlag.dateSubmitted': Date.now()
         })
         await publication.save()
-        res.status(200)
+        res.status(200).send({publication: publication})
     }
     catch (err) {
         console.log(err.message);
@@ -638,6 +638,67 @@ export const castVote = async (req, res) => {
             console.log(publication)
             await publication.save()
             await User.updateMany({'_id': {$in: publication.authors}}, {$inc: {'rep': votingPower}})
+            await Publisher.updateMany({'_id': publication.publisher}, {$inc: {'rep': votingPower}})
+            res.status(200).send({publication: publication})
+        }
+        else {
+            res.status(500).send("Not enough rep to vote!");
+        }
+    }
+    catch(err) {
+        console.log(err.message);
+        res.status(500).send("Error in Saving");
+    }
+}
+
+export const castVoteCF = async (req, res) => {
+    const errors = validationResult(req);
+    console.log(req.body)
+    if (!errors.isEmpty()) {
+        return res.status(400).json({errors: errors.array()});
+    };
+    try {
+        const voterID = req.body.voterID
+        const votingPower = req.body.votingPower
+        const publicationID = req.body.publicationID
+        const flagID = req.body.flagID
+        const submitterID = req.body.submitterID
+        if (votingPower < 0) {
+            
+            let publication = await Publication.findOneAndUpdate({
+                '_id': publicationID,
+                'flags._id': flagID
+            },
+            {
+                $inc: {'flags.$.counterFlag.rep': votingPower},
+                $push: {'flags.$.counterFlag.downvoted': voterID}
+            })
+            console.log(publication)
+            await publication.save()
+            await User.updateMany({
+                '_id': submitterID
+            }, {
+                $inc: {'rep': votingPower}
+            })
+            await Publisher.updateMany({'_id': publication.publisher}, {$inc: {'rep': votingPower}})
+            res.status(200).send({publication: publication})
+        }
+        else if (votingPower > 0) {
+            let publication = await Publication.findOneAndUpdate({
+                '_id': publicationID,
+                'flags._id': flagID
+            },
+            {
+                $inc: {'flags.$.counterFlag.rep': votingPower},
+                $push: {'flags.$.counterFlag.downvoted': voterID}
+            })
+            console.log(publication)
+            await publication.save()
+            await User.updateMany({
+                '_id': submitterID
+            }, {
+                $inc: {'rep': votingPower}
+            })
             await Publisher.updateMany({'_id': publication.publisher}, {$inc: {'rep': votingPower}})
             res.status(200).send({publication: publication})
         }

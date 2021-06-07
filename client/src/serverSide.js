@@ -22,6 +22,7 @@ const serverSide = {
     submitFlag: url + 'publisher/submit-flag',
     submitCounterFlag: url + 'publisher/submit-counterflag',
     castVote: url + 'publisher/cast-vote',
+    castVoteCF: url + 'publisher/cast-vote-cf',
     getNotifs: url + 'notif/get-notifs',
     changeNotifStatus: url + 'notif/change-status',
 };
