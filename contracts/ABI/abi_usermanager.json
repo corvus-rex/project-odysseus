@@ -103,6 +103,73 @@
 		"inputs": [
 			{
 				"internalType": "address",
+				"name": "chiefOfficer",
+				"type": "address"
+			},
+			{
+				"internalType": "int256",
+				"name": "vote",
+				"type": "int256"
+			}
+		],
+		"name": "decrementPublisherRep",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"internalType": "int256",
+				"name": "vote",
+				"type": "int256"
+			}
+		],
+		"name": "decrementUserRep",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "key",
+				"type": "address"
+			}
+		],
+		"name": "getRep",
+		"outputs": [
+			{
+				"internalType": "int256",
+				"name": "",
+				"type": "int256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
 				"name": "key",
 				"type": "address"
 			}
@@ -128,6 +195,54 @@
 		],
 		"name": "grantAuthorship",
 		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "chiefOfficer",
+				"type": "address"
+			},
+			{
+				"internalType": "int256",
+				"name": "vote",
+				"type": "int256"
+			}
+		],
+		"name": "incrementPublisherRep",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			},
+			{
+				"internalType": "int256",
+				"name": "vote",
+				"type": "int256"
+			}
+		],
+		"name": "incrementUserRep",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
 		"stateMutability": "nonpayable",
 		"type": "function"
 	},
@@ -272,6 +387,49 @@
 		"inputs": [
 			{
 				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"name": "publisherNameExistence",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "publishers",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "name",
+				"type": "string"
+			},
+			{
+				"internalType": "int256",
+				"name": "rep",
+				"type": "int256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
 				"name": "name",
 				"type": "string"
 			}
@@ -292,6 +450,59 @@
 		"name": "revokeAuthorship",
 		"outputs": [],
 		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"name": "usernameExistence",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "users",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "username",
+				"type": "string"
+			},
+			{
+				"internalType": "int256",
+				"name": "rep",
+				"type": "int256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "role",
+				"type": "uint256"
+			},
+			{
+				"internalType": "address",
+				"name": "chiefOfficer",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
 		"type": "function"
 	}
 ]

@@ -61,7 +61,7 @@ export const signup = async (req,res) => {
             },
             (err, token) => {
                 if (err) throw err;
-                registerUser(email, publicKey);
+                registerUser(username, publicKey);
                 res.status(200).send({auth: true, user: user, token: token});
             }
         );

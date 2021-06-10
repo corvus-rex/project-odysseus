@@ -8,7 +8,7 @@ contract UserManager {
 
     struct User {
         string username;
-        uint rep;
+        int rep;
         uint role;
         address chiefOfficer;
         // ENUM ROLES
@@ -19,7 +19,7 @@ contract UserManager {
 
     struct Publisher {
         string name;
-        uint rep;
+        int rep;
         address[] authors;
     }
 
@@ -47,10 +47,10 @@ contract UserManager {
         string message
     );
 
-    mapping(address => User) users;
-    mapping(address => Publisher) publishers;
-    mapping(string => bool) usernameExistence;
-    mapping(string => bool) publisherNameExistence;
+    mapping(address => User) public users;
+    mapping(address => Publisher) public publishers;
+    mapping(string => bool) public usernameExistence;
+    mapping(string => bool) public publisherNameExistence;
 
     function findIndexByAddr(address value, address[] memory arr ) private returns(uint) {
         uint i = 0;
@@ -110,6 +110,11 @@ contract UserManager {
         username = users[key].username;
     }
 
+    function getRep(address key) public view
+    returns (int) {
+        return users[key].rep;
+    }
+
     function isRegistered(address key) public view
     returns(bool) {
         return(bytes(users[key].username).length > 0);
@@ -148,5 +153,29 @@ contract UserManager {
         else {
             return false;
         }
+    }
+
+    function incrementPublisherRep(address chiefOfficer, int vote) public
+    returns(bool) {
+        publishers[chiefOfficer].rep += vote;
+        return true;
+    }
+
+    function incrementUserRep(address user, int vote) public
+    returns(bool) {
+        users[user].rep += vote;
+        return true;
+    }
+
+    function decrementPublisherRep(address chiefOfficer, int vote) public
+    returns(bool) {
+        publishers[chiefOfficer].rep -= vote;
+        return true;
+    }
+
+    function decrementUserRep(address user, int vote) public
+    returns(bool) {
+        users[user].rep -= vote;
+        return true;
     }
 }

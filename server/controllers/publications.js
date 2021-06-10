@@ -2,7 +2,7 @@ import {validationResult} from 'express-validator';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import {Publisher, Publication} from '../models/publications.js';
-import {registerUser, electAuthorship, revokeAuthorship} from './callContract.js';
+import {registerUser} from './callContract.js';
 import multer from 'multer';
 import { User } from '../models/users.js';
 
