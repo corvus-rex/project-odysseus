@@ -24,6 +24,8 @@ export function registerUser(username, publicKey) {
             gas: 200000
         }).on('receipt', (receipt) => {
             console.log(receipt)
-        }).on('error', err => console.log(err))
+        }).on('error', err => {
+            console.log(err)
+        })
     })
 }

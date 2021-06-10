@@ -37,6 +37,16 @@ export const signup = async (req,res) => {
         if (user) {
             return res.status(400).json({msg: "User with same username already exist"});
         };
+        user = await User.findOne({publicKey});
+        if (user) {
+            return res.status(400).json({msg: "User with same public key already exist"});
+        };
+        try {
+            registerUser(username, publicKey);
+        }
+        catch (err) {
+            return res.status(400).json({msg: err})
+        }
 
         user = new User({
             username: username,
@@ -61,7 +71,6 @@ export const signup = async (req,res) => {
             },
             (err, token) => {
                 if (err) throw err;
-                registerUser(username, publicKey);
                 res.status(200).send({auth: true, user: user, token: token});
             }
         );
