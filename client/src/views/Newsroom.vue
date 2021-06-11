@@ -90,7 +90,11 @@ import Nav from '../components/Nav'
 import appName from '../appName'
 import serverSide from '../serverSide'
 import axios from 'axios'
-import {publishDraft} from '../contracts/callContract'
+
+import Web3 from 'web3'
+import networkURL from '../../../contracts/networkURL.js'
+import newsroomManagerABI  from "../../../contracts/ABI/abi_newsroommanager.json"
+import newsroomManagerReceipt from '../../../contracts/receipts/receipt_newsroommanager.json'
 
 export default {
     name: 'Newsroom',
@@ -191,8 +195,13 @@ export default {
         confirmModal(draft) {
             this.selectedPublication = draft
             var toBeHashed = this.selectedPublication
+            delete toBeHashed.datePublished
             delete toBeHashed.revised
             delete toBeHashed.status
+            delete toBeHashed.rep
+            delete toBeHashed.upvoted
+            delete toBeHashed.downvoted
+            delete toBeHashed.flags
             var stringifiedPublication = JSON.stringify(toBeHashed)
             this.hashedDraft.update(stringifiedPublication)
             this.$bvModal.show('confirm-publish')
@@ -213,14 +222,34 @@ export default {
                 authorsKey.push(authors[i].publicKey)
             }
             var address = window.ethereum.selectedAddress
-            publishDraft(authorsKey, this.selectedPublication._id, this.hashedDraft.hex(), address)
-            axios.post(serverSide.publishDraft, {
-                draft: this.selectedPublication,
-                approver: this.user._id
-            })
-            .then((res) => {
-                console.log(res.data.publication)
-                this.$router.go()
+            const web3 = new Web3(
+              new Web3.providers.HttpProvider(networkURL.networkURL))
+            var newsroomManagerContract = new web3.eth.Contract(
+              newsroomManagerABI, newsroomManagerReceipt.contractAddress, {
+                from: address
+              }
+            )
+            newsroomManagerContract.methods.publishDraft(
+                this.selectedPublication.title,
+                authorsKey,
+                this.chiefOfficer.publicKey,
+                this.hashedDraft.hex()
+            ).send({
+                from: address,
+                gasPrice: 1,
+                gas: 300000
+            }).on('receipt', receipt => {
+                console.log(receipt)
+                axios.post(serverSide.publishDraft, {
+                    draft: this.selectedPublication,
+                    approver: this.user._id
+                })
+                .then((res) => {
+                    console.log(res.data.publication)
+                    this.$router.go()
+                })
+            }).on('error', err => {
+                console.log(err)
             })
         }
     },
