@@ -29,3 +29,33 @@ export const uploadEvidence = multer({
         return cb(null, false);
     }
 });
+
+const logoPathSave = '../uploads/logo'
+
+
+const logoStorage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, evidencePathSave)
+    },
+    filename: function (req, file, cb) {
+        cb(null, req.body.name + "_" + req.body.chiefOfficer + "_" + 
+        file.originalname);
+    }
+})
+
+export const uploadLogo = multer({
+    storage: logoStorage,
+    fileFilter: (req, file, cb) => {
+        const filetypes = /jpeg|png|jpg|svg/; // filetypes you will accept
+        const mimetype = filetypes.test(file.mimetype); // verify file is == filetypes you will accept
+        const extname = filetypes.test(path.extname(file.originalname)); // extract the file extension
+        // if mimetype && extname are true, then no error
+        if(mimetype && extname){
+            console.log("YEET")
+            return cb(null, true);
+        }
+        // if mimetype or extname false, give an error of compatibilty
+        console.log("YOOOOOOOOOOOOOOT")
+        return cb(null, false);
+    }
+});
