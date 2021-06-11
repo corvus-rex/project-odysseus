@@ -84,7 +84,7 @@
                     variant="primary" @click="inviteAuthors()">Invite</b-button>
                 </b-card>
                 <b-card style="width: 30rem;" v-if="publishing && hasPublisher"
-                 title="These authors has accepted invitation" class="mt-3 ml-1">
+                 title="These authors have accepted invitation" class="mt-3 ml-1">
                     <b-list-group class="mt-3">
                         <b-list-group-item v-for="author in acceptedAuthors" :key="author">
                             <b-container>
@@ -292,16 +292,39 @@ export default {
             Promise.all(promises).then(() => this.$router.go())
         },
         revokeAuthor(authorID, publicKey, publisherID) {
-            console.log(authorID)
-            axios.post(serverSide.revokeAuthorship,
-            {
-                authorID: authorID,
-                authorKey: publicKey,
-                publisherID: publisherID
-            })
-            .then( res => {
-                console.log(res.data.publisher)
-                this.$router.go()
+            if (typeof window.ethereum !== 'undefined') {
+              window.ethereum.request({ method: 'eth_requestAccounts' });
+            }
+            else {
+              alert('Please install MetaMask!')
+              return
+            }
+            var address = window.ethereum.selectedAddress
+            const web3 = new Web3(
+              new Web3.providers.HttpProvider(networkURL.networkURL))
+            var userManagerContract = new web3.eth.Contract(
+              userManagerABI, userManagerReceipt.contractAddress, {
+                from: address
+              }
+            )
+            userManagerContract.methods.revokeAuthorship(publicKey).send({
+                from: address,
+                gasPrice: 1,
+                gas: 200000
+            }).on('receipt', receipt => {
+                console.log(receipt)
+                axios.post(serverSide.revokeAuthorship,
+                {
+                    authorID: authorID,
+                    authorKey: publicKey,
+                    publisherID: publisherID
+                })
+                .then( res => {
+                    console.log(res.data.publisher)
+                    this.$router.go()
+                })
+            }).on('error', err => {
+                console.log(err)
             })
         },
         registerAuthor(author) {

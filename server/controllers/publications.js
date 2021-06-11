@@ -190,7 +190,6 @@ export const revokeAuthor = async (req, res) => {
         }, function(err, obj) {
             chiefOfficerKey = obj.publicKey
         })
-        revokeAuthorship(chiefOfficerKey, authorKey)
         res.status(200).send({publisher: updatedPublisher})
     }
     catch (err) {
