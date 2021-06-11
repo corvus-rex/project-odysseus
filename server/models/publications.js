@@ -19,6 +19,10 @@ const PublisherSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     }],
+    acceptedAuthors: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }],
     rep: {
         type: Number,
         default: 0

@@ -11,6 +11,7 @@ const serverSide = {
     inviteAuthors: url + 'notif/invite-auth',
     acceptAuthorship: url + 'publisher/accept-author',
     revokeAuthorship: url + 'publisher/revoke-author',
+    registerAuthor: url + 'publisher/register-author',
     getPublishedList: url + 'publisher/get-published-list',
     newRevision: url + 'publisher/new-revision',
     publishDraft: url + 'publisher/publish-draft',

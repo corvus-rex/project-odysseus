@@ -1,6 +1,6 @@
 import express from 'express';
 import {registerPublisher, getPublisher, 
-    findPublisherByID, acceptAuthorship, revokeAuthor,
+    findPublisherByID, acceptAuthorship, revokeAuthor, registerAuthor,
     newDraft, getPublication, getDrafts, editDraft, getPublishedList,
     publishDraft, newRevision, getNews, submitFlag, 
     getFlag, submitCounterFlag, castVote, castVoteCF} from '../controllers/publications.js'
@@ -18,6 +18,7 @@ router.post('/', [], getPublisher);
 router.post('/findByID', [], findPublisherByID);
 router.post('/accept-author', [], acceptAuthorship)
 router.post('/revoke-author', [], revokeAuthor)
+router.post('/register-author', [], registerAuthor)
 router.post('/publish-draft', [], publishDraft)
 router.post('/new-revision', [], newRevision)
 router.get('/get-news', getNews)

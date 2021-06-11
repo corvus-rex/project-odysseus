@@ -102,26 +102,45 @@ export const acceptAuthorship = async (req, res) => {
     try {
         let userID = req.body.userID
         let publisherID = req.body.publisherID
-        let newAuthor = req.body.publicKey
-        let user = await User.findOneAndUpdate({'_id': userID}, {'role': "Author", 'hasPublisher': true})
-        var publisherObj
-        let publisher = await Publisher.findOne({'_id': publisherID}, function(err, obj) {
-            publisherObj = obj
-        })
-        console.log(publisherObj)
-        let chiefOfficer = await User.findOne({'_id': publisherObj.chiefOfficer})
-        let pendingAuthors = publisherObj.pendingAuthors.filter((author) => {
-            return author != userID
-        })
-        publisherObj.authors.push(userID)
-        console.log(publisherObj.authors)
-        publisher = await Publisher.findOneAndUpdate({'_id': publisherID}, 
-        {'authors': publisherObj.authors, 'pendingAuthors': pendingAuthors})
+        let publisher = await Publisher.findOneAndUpdate(
+            {'_id': publisherID}, 
+            {
+                $push: {'acceptedAuthors': userID}
+            })
+        let user = await User.findOne({'_id': userID})
+        res.status(200).send({publisher: publisher, user: user})
+    }
+    catch (err) {
+        console.log(err.message);
+        res.status(500).send("Error in Fetching");
+    }
+}
+
+export const registerAuthor = async (req, res) => {
+    const errors = validationResult(req);
+    console.log(req.body)
+    if (!errors.isEmpty()) {
+        res.status(400).json({errors: errors.array()});
+    };
+    try {
+        let authorID = req.body.authorID
+        let publisherID = req.body.publisherID
+        let user = await User.findOneAndUpdate({'_id': authorID}, {'role': "Author", 'hasPublisher': true})
         await user.save()
+        user = await User.findOne({'_id': authorID})
+        let publisher = await Publisher.findOneAndUpdate(
+            {'_id': publisherID},
+            {
+                $pull: {
+                    'pendingAuthors': authorID,
+                    'acceptedAuthors': authorID
+                },
+                $push: {
+                    'authors': authorID
+                }
+            }
+        )
         await publisher.save()
-        user = await User.findOne({'_id': userID})
-        publisher = await Publisher.findOne({'_id': publisherID})
-        electAuthorship(chiefOfficer.publicKey, newAuthor)
         res.status(200).send({publisher: publisher, user: user})
     }
     catch (err) {
