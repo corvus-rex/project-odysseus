@@ -85,12 +85,16 @@ import appName from '../appName'
 import 'quill/dist/quill.core.css'
 import 'quill/dist/quill.snow.css'
 import 'quill/dist/quill.bubble.css'
-
 import { quillEditor } from 'vue-quill-editor'
+
 import serverSide from '../serverSide'
 import axios from 'axios'
-import { newRevision } from '../contracts/callContract'
 import sha256 from 'js-sha256'
+
+import Web3 from 'web3'
+import networkURL from '../../../contracts/networkURL.js'
+import newsroomManagerABI  from "../../../contracts/ABI/abi_newsroommanager.json"
+import newsroomManagerReceipt from '../../../contracts/receipts/receipt_newsroommanager.json'
 
 export default {
     name: 'newDraft',
@@ -98,6 +102,7 @@ export default {
         return {
             appName: appName,
             publicationID: "",
+            publication: {},
             draftPublisher: "",
             prevVersions: [],
             author: {},
@@ -172,6 +177,7 @@ export default {
             this.$router.push({name: "newsroom"})
           }
           else {
+            this.publication = res.data.publication[0]
             this.newsTitle = res.data.publication[0].title
             this.newsDescription = res.data.publication[0].description
             this.newsTopic = res.data.publication[0].topic
@@ -183,43 +189,78 @@ export default {
         })
       },
       newRevision() {
-        axios.post(serverSide.newRevision,{
-          publicationID: this.publicationID,
-          authorID: this.author._id,
-          publisherID: this.publisher._id,
-          prevVersions: this.prevVersions,
-          title: this.newsTitle,
-          description: this.newsDescription,
-          topic: this.newsTopic,
-          tags: this.newsTags,
-          locations: this.newsLocations,
-          article: this.news,
-          flagID: this.flag._id,
-          flaggerID: this.flagger._id
-        })
-        .then((res) => {
-          console.log(res.data.publication)
-          if (typeof window.ethereum !== 'undefined') {
-            window.ethereum.request({ method: 'eth_requestAccounts' });
+        if (typeof window.ethereum !== 'undefined') {
+          window.ethereum.request({ method: 'eth_requestAccounts' });
+        }
+        else {
+          alert('Please install MetaMask!')
+        }
+        var authors = this.publication.authors
+        var authorsID = []
+        for (var i = 0; i < authors.length; i++) {
+            authorsID.push(authors[i]._id)
+        }
+        if (!authorsID.includes(this.author._id)) {
+          authors.push(this.author)
+          authorsID.push(this.author._id)
+        }
+        var authorsKey = []
+        for (var c = 0; c < authors.length; c++) {
+            authorsKey.push(authors[c].publicKey)
+        }
+        var address = window.ethereum.selectedAddress
+        var toBeHashed = this.publication
+        delete toBeHashed.datePublished
+        delete toBeHashed.revised
+        delete toBeHashed.status
+        delete toBeHashed.rep
+        delete toBeHashed.upvoted
+        delete toBeHashed.downvoted
+        delete toBeHashed.flags
+        var stringifiedPublication = JSON.stringify(toBeHashed)
+        var hashedArticle = sha256.create()
+        hashedArticle.update(stringifiedPublication)
+        const web3 = new Web3(
+          new Web3.providers.HttpProvider(networkURL.networkURL))
+        var newsroomManagerContract = new web3.eth.Contract(
+          newsroomManagerABI, newsroomManagerReceipt.contractAddress, {
+            from: address
           }
-          else {
-            alert('Please install MetaMask!')
-          }
-          var authors = res.data.publication.authors
-          var authorsKey = []
-          for (var i = 0; i < authors.length; i++) {
-              authorsKey.push(authors[i].publicKey)
-          }
-          var address = window.ethereum.selectedAddress
-          var toBeHashed = res.data.publication
-          delete toBeHashed.revised
-          delete toBeHashed.status
-          var stringifiedPublication = JSON.stringify(toBeHashed)
-          var hashedArticle = sha256.create()
-          hashedArticle.update(stringifiedPublication)
-          newRevision(authorsKey, res.data.publication._id, hashedArticle.hex(), 
-          this.publicationID, address)
-          this.$router.push({name: "newsroom"})
+        )
+        newsroomManagerContract.methods.createRevision(
+            this.publication.chainID,
+            this.newsTitle,
+            authorsKey,
+            this.chiefOfficer.publicKey,
+            hashedArticle.hex()
+        ).send({
+            from: address,
+            gasPrice: 1,
+            gas: 300000
+        }).on('receipt', receipt => {
+          console.log(receipt)
+          var chainID = receipt.events.NewsRevised.returnValues.newsID
+          axios.post(serverSide.newRevision,{
+            publicationID: this.publicationID,
+            authorID: this.author._id,
+            publisherID: this.publisher._id,
+            prevVersions: this.prevVersions,
+            title: this.newsTitle,
+            description: this.newsDescription,
+            topic: this.newsTopic,
+            tags: this.newsTags,
+            locations: this.newsLocations,
+            article: this.news,
+            flagID: this.flag._id,
+            flaggerID: this.flagger._id,
+            chainID: chainID
+          })
+          .then((res) => {
+            console.log(res.data.publication)
+            this.$router.push({name: "newsroom"})
+          })
+        }).on('error', err => {
+          console.log(err)
         })
       },
       viewPublication() {

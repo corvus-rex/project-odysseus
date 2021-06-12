@@ -412,6 +412,7 @@ export const newRevision = async (req, res) => {
         let content = req.body.article
         let flaggerID = req.body.flaggerID
         let flagID = req.body.flagID
+        let chainID = req.body.chainID
         let authors = []
         let currentAuthorsID = []
         let publication = await Publication.findOne({'_id': publicationID}, 
@@ -465,7 +466,8 @@ export const newRevision = async (req, res) => {
                 status: 'Published',
                 prevVersions: prevVersions,
                 flagger: flaggerID,
-                flags: flags
+                flags: flags,
+                chainID: chainID
             })
         }
         else {
@@ -479,7 +481,8 @@ export const newRevision = async (req, res) => {
                 authors: authors,
                 publisher: publisherID,
                 status: 'Published',
-                prevVersions: prevVersions
+                prevVersions: prevVersions,
+                chainID: chainID
             })
         }
         await revisedPublication.save()
