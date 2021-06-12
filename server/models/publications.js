@@ -40,6 +40,10 @@ const PublicationSchema = mongoose.Schema({
         type: Boolean,
         default: false
     },
+    chainID: {
+        type: Number,
+        default: -1
+    },
     prevVersions: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Publication'

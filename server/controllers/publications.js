@@ -367,11 +367,14 @@ export const publishDraft = async (req, res) => {
         let draft = req.body.draft
         let draftID = req.body.draft._id
         let approver = req.body.approver
+        let chainID = parseInt(req.body.chainID)
+        console.log("Chain ID: ", chainID)
         let authors = []
         let publication = await Publication.findOneAndUpdate({'_id': draftID}, {
             'status': 'Published',
             'datePublished': Date.now(),
-            'approver': approver
+            'approver': approver,
+            'chainID': chainID
         }, function(err, obj) {
             authors = obj.authors
         })

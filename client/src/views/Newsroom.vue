@@ -239,10 +239,12 @@ export default {
                 gasPrice: 1,
                 gas: 300000
             }).on('receipt', receipt => {
-                console.log(receipt)
+                console.log(receipt.events.NewsPublished.returnValues.newsID)
+                var chainID = receipt.events.NewsPublished.returnValues.newsID
                 axios.post(serverSide.publishDraft, {
                     draft: this.selectedPublication,
-                    approver: this.user._id
+                    approver: this.user._id,
+                    chainID: chainID
                 })
                 .then((res) => {
                     console.log(res.data.publication)
