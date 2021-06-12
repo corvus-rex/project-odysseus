@@ -522,6 +522,7 @@ export const submitFlag = async (req, res) => {
         const userID = req.body.userID;
         const username = req.body.username;
         const flagWriteup = req.body.flagWriteup;
+        const chainID = req.body.chainID;
         let flags = []
         let flagIndex = 0
         let evidenceName = ""
@@ -534,6 +535,7 @@ export const submitFlag = async (req, res) => {
             })
         var newFlag = {
             subject: flagSubject,
+            chainID: chainID,
             dateSubmitted: Date.now(),
             status: "Pending",
             flaggerID: userID,

@@ -85,6 +85,7 @@ const PublicationSchema = mongoose.Schema({
     flags: [{
         subject: String,
         dateSubmitted: Date,
+        chainID: Number,
         expirySeconds: {
             type: Number,
             default: 7200
