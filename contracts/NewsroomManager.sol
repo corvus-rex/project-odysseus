@@ -7,6 +7,7 @@ contract NewsroomManager {
 
     uint constant NULL = 0;
     int constant repLimit = 10;
+    uint constant expirySeconds = 7200 seconds;
     uint currentNews = 0;
     uint currentFlag = 0;
 
@@ -29,7 +30,8 @@ contract NewsroomManager {
     struct Flag {
         uint newsID;
         string subject;
-        address flagger;
+        uint submittedAt;
+        address payable flagger;
         string contentHash;
         uint status;
         // ENUM status
@@ -84,7 +86,9 @@ contract NewsroomManager {
         uint indexed flagID,
         address flagger,
         string contentHash,
+        uint submittedAt,
         uint expirySeconds,
+        uint stakeDeposited,
         string message
     );
 
@@ -95,6 +99,7 @@ contract NewsroomManager {
         address publisher,
         address[] authors,
         address flagger,
+        address counterFlagger,
         string contentHash,
         string message
     );
@@ -125,10 +130,18 @@ contract NewsroomManager {
         string message
     );
 
+    event StakeWithdrawn (
+        address flagger,
+        uint flagID,
+        uint amount,
+        string message
+    );
+
     mapping(uint => Publication) public publications;
     mapping(uint => Flag) public flags;
     mapping(uint => mapping(address => bool)) public newsUpvoters;
     mapping(uint => mapping(address => bool)) public newsDownvoters;
+    mapping(uint => uint) public stakes;
 
     constructor (address contractAddr) {
         userManager = UserManager(contractAddr);
@@ -182,7 +195,6 @@ contract NewsroomManager {
             publications[currentNews].contentHash = _contentHash;
             publications[currentNews].rep = 1;
             publications[currentNews].prevVersion = _newsID;
-            publications[currentNews].flags = publications[_newsID].flags;
             publications[_newsID].nextVersion = currentNews;
             userManager.incrementPublisherRep(_publisher, 1);
             for(uint i = 0; i < _authors.length; i++) {
@@ -264,7 +276,7 @@ contract NewsroomManager {
         string memory _subject, 
         string memory _contentHash,
         uint _newsID,
-        uint _expirySeconds) public
+        uint _expirySeconds) public payable
         returns(uint) {
             require (userManager.isRegistered(msg.sender), 
             "This user is not registered!");
@@ -272,15 +284,93 @@ contract NewsroomManager {
                 "Voter is not allowed to vote on article of the same publisher");
             require(publicationExist(_newsID), "News does not exist!");
             flags[currentFlag].subject = _subject;
-            flags[currentFlag].flagger = msg.sender;
+            flags[currentFlag].flagger = payable(msg.sender);
             flags[currentFlag].contentHash = _contentHash;
             flags[currentFlag].expirySeconds = _expirySeconds;
             flags[currentFlag].newsID = _newsID;
+            flags[currentFlag].submittedAt = block.timestamp;
+            stakes[currentFlag] = msg.value;
             emit FlagCreated(_newsID, currentFlag, msg.sender, 
-            _contentHash, _expirySeconds, "A new flag has been created");
+            _contentHash, block.timestamp, _expirySeconds, msg.value,
+             "A new flag has been created");
             currentFlag += 1;
             return currentFlag;
         }
+
+    function rejectFlag(uint _flagID, string memory _counterflagWriteup) 
+        public payable
+        returns(bool) {
+            address publisher = publications[flags[_flagID].newsID].publisher;
+            require(!isIgnored(flags[_flagID]), "This flag is already expired");
+            require(userManager.isInPublisher(msg.sender, publisher), 
+            "Counterflagger is not within the same publisher");
+            flags[_flagID].status = 2;
+            flags[_flagID].counterflagWriteup = _counterflagWriteup;
+            flags[_flagID].counterFlagger;
+            flags[_flagID].flagger.transfer(stakes[_flagID]);
+            emit FlagRejected(
+                flags[_flagID].newsID, 
+                _flagID, 
+                msg.sender, 
+                _counterflagWriteup, 
+                "A flag has been rejected");
+            stakes[_flagID] = 0;
+            return true;
+        }
+
+    function acceptFlag(
+        uint _flagID, 
+        string memory _title,
+        address[] memory _authors,
+        string memory _contentHash
+    ) public payable
+    returns(uint) {
+        uint _newsID = flags[_flagID].newsID;
+        address _publisher = publications[_newsID].publisher;
+        require(userManager.isAuthor(msg.sender), "User is not a registered author");
+        require(userManager.isInPublisher(msg.sender, _publisher), "User with this public key already exist!");
+        require(publications[_newsID].nextVersion == NULL, "This publication already has a revision!");
+        publications[currentNews].title = _title;
+        publications[currentNews].authors = _authors;
+        publications[currentNews].publisher = _publisher;
+        publications[currentNews].contentHash = _contentHash;
+        publications[currentNews].rep = 1;
+        publications[currentNews].prevVersion = _newsID;
+        publications[currentNews].flags = publications[_newsID].flags;
+        publications[_newsID].nextVersion = currentNews;
+        userManager.incrementPublisherRep(_publisher, 1);
+        for(uint i = 0; i < _authors.length; i++) {
+            userManager.incrementUserRep(_authors[i], 1); // increase authors rep score by 1
+        }
+        currentNews += 1;
+        flags[_flagID].status = 1;
+        flags[_flagID].counterFlagger = msg.sender;
+        stakes[_flagID] += msg.value;
+        flags[_flagID].flagger.transfer(stakes[_flagID]);
+        emit FlagAccepted(
+            _newsID, 
+            _flagID, 
+            _newsID, 
+            _publisher, 
+            _authors, 
+            flags[_flagID].flagger, 
+            msg.sender,
+            _contentHash, 
+            "A flag has been accepted");
+        stakes[_flagID] = 0;
+        return currentNews;
+    }
+
+    function withdrawStake(uint _flagID) public returns(uint) {
+        require(isIgnored(flags[_flagID]), "Flag hasn't been ignored, wait until flag is expired");
+        require(isFlagger(msg.sender, _flagID), "User is not the flagger");
+        flags[_flagID].flagger.transfer(stakes[_flagID]);
+        stakes[_flagID] = 0;
+        flags[_flagID].status = 3;
+        emit StakeWithdrawn(msg.sender, _flagID, stakes[_flagID], 
+        "A flag has been ignored and the stake withdrawn");
+        return _flagID;
+    }
 
     function isUpvoter(address user, uint _newsID) public view
     returns(bool) {
@@ -295,5 +385,25 @@ contract NewsroomManager {
     function publicationExist(uint _newsID) public view
     returns(bool) {
         return (_newsID <= currentNews);
+    }
+
+    function isIgnored(Flag memory flag) public view
+    returns(bool) {
+        if (flag.status == 1) {
+            return true;
+        }
+        else {
+            return((block.timestamp - flag.submittedAt) > expirySeconds);
+        }
+    }
+
+    function isFlagger(address flagger, uint _flagID) public view
+    returns(bool) {
+        return(flagger == flags[_flagID].flagger);
+    }
+
+    function getHash(uint _newsID) public view
+    returns(string memory) {
+        return publications[_newsID].contentHash;
     }
 }
