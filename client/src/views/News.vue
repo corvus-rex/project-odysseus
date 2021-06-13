@@ -50,6 +50,14 @@
             class="btn btn-primary">
             View Rejection</router-link>
           </div>
+          <div v-if="flag.flaggerID === user._id">
+            <b-button v-if="flagStatus[flag._id] === 'Ignored'" 
+            id="claim-stake"
+            variant="secondary"
+            @click="claimStake(flag)">
+              Claim Stake
+            </b-button>
+          </div>
         </b-list-group-item>
       </b-list-group>
       <p v-else>No flags to display</p>
@@ -73,7 +81,8 @@ export default {
             publisher: null,
             isAuthorsBool: false,
             newsID: "",
-            news: {}
+            news: {},
+            flagStatus: {}
         }
     },
     components: {
@@ -143,15 +152,23 @@ export default {
         var now = Date.now().valueOf()
         var timeDiff = (now - Date.parse(flag.dateSubmitted)) / 1000
         if (flag.status == "Accepted") {
+          this.flagStatus[flag._id] = "Accepted"
+          console.log(this.flagStatus)
           return "Accepted"
         }
         else if (flag.status == "Rejected") {
+          this.flagStatus[flag._id] = "Rejected"
+          console.log(this.flagStatus)
           return "Rejected"
         }
         else if (timeDiff < flag.expirySeconds) {
+          this.flagStatus[flag._id] = "Pending"
+          console.log(this.flagStatus)
           return "Pending"
         }
         else {
+          this.flagStatus[flag._id] = "Ignored"
+          console.log(this.flagStatus)
           return "Ignored"
         }
       }

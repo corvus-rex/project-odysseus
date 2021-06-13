@@ -85,6 +85,12 @@ export default {
         submitFlag() {
             var hashedContent = sha256.create()
             hashedContent.update(this.flagWriteup)
+            if (typeof window.ethereum !== 'undefined') {
+              window.ethereum.request({ method: 'eth_requestAccounts' });
+            }
+            else {
+              alert('Please install MetaMask!')
+            }
             let address = window.ethereum.selectedAddress
             let web3 = new Web3(
               new Web3.providers.HttpProvider(networkURL.networkURL))
@@ -101,7 +107,8 @@ export default {
             ).send({
                 from: address,
                 gasPrice: 1,
-                gas: 300000
+                gas: 300000,
+                value: Web3.utils.toWei('1', 'ether')
             }).on('receipt', receipt => {
               console.log(receipt)
               var chainID = receipt.events.FlagCreated.returnValues.flagID

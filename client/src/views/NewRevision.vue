@@ -114,7 +114,7 @@ export default {
             newsTags: [],
             newsLocations: [],
             news: null,
-            flag: {},
+            flag: null,
             hasFlagger: false,
             flagger: {},
             editorOption: {
@@ -227,41 +227,80 @@ export default {
             from: address
           }
         )
-        newsroomManagerContract.methods.createRevision(
-            this.publication.chainID,
-            this.newsTitle,
-            authorsKey,
-            this.chiefOfficer.publicKey,
-            hashedArticle.hex()
-        ).send({
-            from: address,
-            gasPrice: 1,
-            gas: 300000
-        }).on('receipt', receipt => {
-          console.log(receipt)
-          var chainID = receipt.events.NewsRevised.returnValues.newsID
-          axios.post(serverSide.newRevision,{
-            publicationID: this.publicationID,
-            authorID: this.author._id,
-            publisherID: this.publisher._id,
-            prevVersions: this.prevVersions,
-            title: this.newsTitle,
-            description: this.newsDescription,
-            topic: this.newsTopic,
-            tags: this.newsTags,
-            locations: this.newsLocations,
-            article: this.news,
-            flagID: this.flag._id,
-            flaggerID: this.flagger._id,
-            chainID: chainID
+        if (this.flag == null) {
+          newsroomManagerContract.methods.createRevision(
+              this.publication.chainID,
+              this.newsTitle,
+              authorsKey,
+              this.chiefOfficer.publicKey,
+              hashedArticle.hex()
+          ).send({
+              from: address,
+              gasPrice: 1,
+              gas: 300000
+          }).on('receipt', receipt => {
+            console.log(receipt)
+            var chainID = receipt.events.NewsRevised.returnValues.newsID
+            axios.post(serverSide.newRevision,{
+              publicationID: this.publicationID,
+              authorID: this.author._id,
+              publisherID: this.publisher._id,
+              prevVersions: this.prevVersions,
+              title: this.newsTitle,
+              description: this.newsDescription,
+              topic: this.newsTopic,
+              tags: this.newsTags,
+              locations: this.newsLocations,
+              article: this.news,
+              flagID: this.flag._id,
+              flaggerID: this.flagger._id,
+              chainID: chainID
+            })
+            .then((res) => {
+              console.log(res.data.publication)
+              this.$router.push({name: "newsroom"})
+            })
+          }).on('error', err => {
+            console.log(err)
           })
-          .then((res) => {
-            console.log(res.data.publication)
-            this.$router.push({name: "newsroom"})
+        }
+        else {
+          newsroomManagerContract.methods.acceptFlag(
+              this.flag.chainID,
+              this.newsTitle,
+              authorsKey,
+              hashedArticle.hex()
+          ).send({
+              from: address,
+              gasPrice: 1,
+              gas: 500000,
+              value: Web3.utils.toWei('1', 'ether')
+          }).on('receipt', receipt => {
+            console.log(receipt)
+            var chainID = receipt.events.FlagAccepted.returnValues.newsID
+            axios.post(serverSide.newRevision,{
+              publicationID: this.publicationID,
+              authorID: this.author._id,
+              publisherID: this.publisher._id,
+              prevVersions: this.prevVersions,
+              title: this.newsTitle,
+              description: this.newsDescription,
+              topic: this.newsTopic,
+              tags: this.newsTags,
+              locations: this.newsLocations,
+              article: this.news,
+              flagID: this.flag._id,
+              flaggerID: this.flagger._id,
+              chainID: chainID
+            })
+            .then((res) => {
+              console.log(res.data.publication)
+              this.$router.push({name: "newsroom"})
+            })
+          }).on('error', err => {
+            console.log(err)
           })
-        }).on('error', err => {
-          console.log(err)
-        })
+        }
       },
       viewPublication() {
         console.log(this.news)

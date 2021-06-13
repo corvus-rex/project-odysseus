@@ -42,7 +42,10 @@ import Nav from '../components/Nav'
 import appName from '../appName'
 import serverSide from '../serverSide'
 import axios from 'axios'
-// import {registerPublisher} from '../contracts/callContract'
+import Web3 from 'web3'
+import networkURL from '../../../contracts/networkURL.js'
+import newsroomManagerABI  from "../../../contracts/ABI/abi_newsroommanager.json"
+import newsroomManagerReceipt from '../../../contracts/receipts/receipt_newsroommanager.json'
 
 export default {
     name: 'RejectFlag',
@@ -106,27 +109,45 @@ export default {
           })
         },
         submitCounterFlag() {
-            // if (typeof window.ethereum !== 'undefined') {
-            //   window.ethereum.request({ method: 'eth_requestAccounts' });
-            // }
-            // else {
-            //   alert('Please install MetaMask!')
-            // }
-            // var address = window.ethereum.selectedAddress
-            // registerPublisher(this.pubName, address)
-            axios.post(serverSide.submitCounterFlag, {
-              userID: this.user._id,
-              publicationID: this.publication._id,
-              flagID: this.flag._id,
-              counterFlagWriteup: this.counterFlagWriteup
+            if (typeof window.ethereum !== 'undefined') {
+              window.ethereum.request({ method: 'eth_requestAccounts' });
+            }
+            else {
+              alert('Please install MetaMask!')
+            }
+            let address = window.ethereum.selectedAddress
+            let web3 = new Web3(
+              new Web3.providers.HttpProvider(networkURL.networkURL))
+            let newsroomManagerContract = new web3.eth.Contract(
+              newsroomManagerABI, newsroomManagerReceipt.contractAddress, {
+                from: address
+              }
+            )
+            newsroomManagerContract.methods.rejectFlag(
+              this.flag.chainID,
+              this.counterFlagWriteup
+            ).send({
+                from: address,
+                gasPrice: 1,
+                gas: 300000
+            }).on('receipt', receipt => {
+              console.log(receipt)
+              axios.post(serverSide.submitCounterFlag, {
+                userID: this.user._id,
+                publicationID: this.publication._id,
+                flagID: this.flag._id,
+                counterFlagWriteup: this.counterFlagWriteup
+              })
+              .then((res) => {
+                console.log(res.data.publication)
+                this.$router.push({name: "news", query:{id: this.publication._id}})
+              })
+              .catch(function (error) {
+                  console.error(error.response);
+              });
+            }).on('error', err => {
+              console.log(err)
             })
-            .then((res) => {
-              console.log(res.data.publication)
-              this.$router.push({name: "news", query:{id: this.publication._id}})
-            })
-            .catch(function (error) {
-                console.error(error.response);
-            });
         }
     },
     created: async function() {
