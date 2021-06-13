@@ -194,14 +194,13 @@ export default {
         },
         confirmModal(draft) {
             this.selectedPublication = draft
-            var toBeHashed = this.selectedPublication
-            delete toBeHashed.datePublished
-            delete toBeHashed.revised
-            delete toBeHashed.status
-            delete toBeHashed.rep
-            delete toBeHashed.upvoted
-            delete toBeHashed.downvoted
-            delete toBeHashed.flags
+            var selected = this.selectedPublication
+            var {title, article, description,
+            publisher, tags, locations, ...partialObject} = selected
+            var toBeHashed = {title, article, description, 
+            publisher, tags, locations}
+            console.log("Partial Object: ", partialObject)
+            console.log("To-be Hashed: ", toBeHashed)
             var stringifiedPublication = JSON.stringify(toBeHashed)
             this.hashedDraft.update(stringifiedPublication)
             this.$bvModal.show('confirm-publish')

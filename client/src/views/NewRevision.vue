@@ -209,14 +209,14 @@ export default {
             authorsKey.push(authors[c].publicKey)
         }
         var address = window.ethereum.selectedAddress
-        var toBeHashed = this.publication
-        delete toBeHashed.datePublished
-        delete toBeHashed.revised
-        delete toBeHashed.status
-        delete toBeHashed.rep
-        delete toBeHashed.upvoted
-        delete toBeHashed.downvoted
-        delete toBeHashed.flags
+        var toBeHashed = {
+          title: this.newsTitle, 
+          article: this.news, 
+          description: this.newsDescription,
+          publisher: this.publisher._id, 
+          tags: this.newsTags, 
+          locations: this.newsLocations}
+        console.log("To-be Hashed: ", toBeHashed)
         var stringifiedPublication = JSON.stringify(toBeHashed)
         var hashedArticle = sha256.create()
         hashedArticle.update(stringifiedPublication)
@@ -240,6 +240,7 @@ export default {
               gas: 300000
           }).on('receipt', receipt => {
             console.log(receipt)
+            console.log(receipt.events.NewsRevised.returnValues.newsID)
             var chainID = receipt.events.NewsRevised.returnValues.newsID
             axios.post(serverSide.newRevision,{
               publicationID: this.publicationID,
@@ -252,8 +253,8 @@ export default {
               tags: this.newsTags,
               locations: this.newsLocations,
               article: this.news,
-              flagID: this.flag._id,
-              flaggerID: this.flagger._id,
+              flagID: null,
+              flaggerID: null,
               chainID: chainID
             })
             .then((res) => {
