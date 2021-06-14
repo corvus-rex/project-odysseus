@@ -52,7 +52,7 @@
             View Rejection</router-link>
           </div>
           <div v-if="flag.flaggerID === user._id">
-            <b-button v-if="flagStatus[flag._id] === 'Ignored'" 
+            <b-button v-if="flagStatus[flag._id] === 'Ignored' & flag.status != 'Ignored'" 
             id="claim-stake"
             variant="secondary"
             @click="claimStake(flag)">
@@ -221,6 +221,37 @@ export default {
             alert("This article has been tampered!\n ------------- \nLocal Hash: " 
             + thisHash + "\n" + "Blockchain Hash: " + res)
           }
+        })
+      },
+      claimStake(flag) {
+        if (typeof window.ethereum !== 'undefined') {
+          window.ethereum.request({ method: 'eth_requestAccounts' });
+        }
+        else {
+          alert('Please install MetaMask!')
+        }
+        let address = window.ethereum.selectedAddress
+        const web3 = new Web3(
+          new Web3.providers.HttpProvider(networkURL.networkURL))
+        var newsroomManagerContract = new web3.eth.Contract(
+          newsroomManagerABI, newsroomManagerReceipt.contractAddress, {
+            from: address
+          }
+        )
+        newsroomManagerContract.methods.withdrawStake(
+          flag.chainID
+        ).send({
+            from: address,
+            gasPrice: 1,
+            gas: 300000
+        }).on('receipt', receipt => {
+          console.log(receipt)
+          axios.post(
+            serverSide.ignoreFlag, {flagID: flag._id}
+          ).then((res) => {
+            console.log(res.data.publication)
+            this.$router.go()
+          })
         })
       }
     },

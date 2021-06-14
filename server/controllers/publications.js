@@ -721,3 +721,25 @@ export const castVoteCF = async (req, res) => {
         res.status(500).send("Error in Saving");
     }
 }
+
+export const ignoreFlag = async (req, res) => {
+    const errors = validationResult(req);
+    console.log(req.body)
+    if (!errors.isEmpty()) {
+        return res.status(400).json({errors: errors.array()});
+    };
+    try{
+        const flagID = req.body.flagID;
+        let publication = await Publication.findOneAndUpdate({
+            'flags._id': flagID}, 
+            {
+                'flags.$.status': "Ignored"
+            })
+        console.log("Publication ", publication)
+        res.status(200).send({flag: publication})
+    }
+    catch (err) {
+        console.log(err.message);
+        res.status(500).send("Error in Saving");
+    }
+}
