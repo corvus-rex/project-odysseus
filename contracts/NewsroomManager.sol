@@ -141,6 +141,8 @@ contract NewsroomManager {
     mapping(uint => Flag) public flags;
     mapping(uint => mapping(address => bool)) public newsUpvoters;
     mapping(uint => mapping(address => bool)) public newsDownvoters;
+    mapping(uint => mapping(address => bool)) public CFUpvoters;
+    mapping(uint => mapping(address => bool)) public CFDownvoters;
     mapping(uint => uint) public stakes;
 
     constructor (address contractAddr) {
@@ -272,6 +274,74 @@ contract NewsroomManager {
             return publications[_newsID].rep;
         }
 
+    function upvoteCF(
+        uint _flagID
+        ) public
+        returns(int) {
+            require (userManager.isRegistered(msg.sender), 
+            "This user is not registered!");
+            require (userManager.getRep(msg.sender) > 0, 
+            "Insufficient rep score to vote");
+            require(!isUpvoterCF(msg.sender, _flagID), 
+            "User already voted the news");
+            require(!isDownvoterCF(msg.sender, _flagID), 
+            "User already voted the news");
+            require(!userManager.isInPublisher(msg.sender, publications[_flagID].publisher),
+             "Voter is not allowed to vote on article of the same publisher");
+            uint _newsID = flags[_flagID].newsID;
+            int votingPower = 0;
+            if (userManager.getRep(msg.sender) > repLimit) {
+                votingPower = repLimit;
+            }
+            else {
+                votingPower = userManager.getRep(msg.sender);
+            }
+            flags[_flagID].counterflagRep += votingPower;
+            flags[_flagID].counterflagUpvoter.push(msg.sender);
+            CFUpvoters[_flagID][msg.sender] = true;
+            userManager.incrementPublisherRep(publications[_newsID].publisher, votingPower);
+            for(uint i = 0; i < publications[_newsID].authors.length; i++) {
+                userManager.incrementUserRep(publications[_newsID].authors[i], votingPower); // increase authors rep score by 1
+            }
+            emit CounterflagUpvoted(_newsID, _flagID, msg.sender, 
+            votingPower, flags[_flagID].counterflagRep, "A counterflag has been upvoted");
+            return flags[_flagID].counterflagRep;
+        }
+
+    function downvoteCF(
+        uint _flagID
+        ) public
+        returns(int) {
+            require (userManager.isRegistered(msg.sender), 
+            "This user is not registered!");
+            require (userManager.getRep(msg.sender) > 0, 
+            "Insufficient rep score to vote");
+            require(!isUpvoterCF(msg.sender, _flagID), 
+            "User already voted the news");
+            require(!isDownvoterCF(msg.sender, _flagID), 
+            "User already voted the news");
+            require(!userManager.isInPublisher(msg.sender, publications[_flagID].publisher),
+             "Voter is not allowed to vote on article of the same publisher");
+            uint _newsID = flags[_flagID].newsID;
+            int votingPower = 0;
+            if (userManager.getRep(msg.sender) > repLimit) {
+                votingPower = repLimit;
+            }
+            else {
+                votingPower = userManager.getRep(msg.sender);
+            }
+            flags[_flagID].counterflagRep -= votingPower;
+            flags[_flagID].counterflagDownvoter.push(msg.sender);
+            CFDownvoters[_flagID][msg.sender] = true;
+            userManager.decrementPublisherRep(publications[_newsID].publisher, votingPower);
+            for(uint i = 0; i < publications[_newsID].authors.length; i++) {
+                userManager.decrementUserRep(publications[_newsID].authors[i], votingPower); // increase authors rep score by 1
+            }
+            emit CounterflagDownvoted(_newsID, _flagID, msg.sender, 
+            votingPower, flags[_flagID].counterflagRep, "A counterflag has been downvoted");
+            return flags[_flagID].counterflagRep;
+        }
+
     function submitFlag(
         string memory _subject, 
         string memory _contentHash,
@@ -364,9 +434,27 @@ contract NewsroomManager {
     function withdrawStake(uint _flagID) public returns(uint) {
         require(isIgnored(flags[_flagID]), "Flag hasn't been ignored, wait until flag is expired");
         require(isFlagger(msg.sender, _flagID), "User is not the flagger");
+        uint _newsID = flags[_flagID].newsID;
+        int votingPower = 0;
+        if (userManager.getRep(msg.sender) > repLimit) {
+            votingPower = repLimit;
+        }
+        else if (userManager.getRep(msg.sender) < 0){
+            votingPower = 1;
+        }
+        else {
+            votingPower = userManager.getRep(msg.sender);
+        }
         flags[_flagID].flagger.transfer(stakes[_flagID]);
         stakes[_flagID] = 0;
         flags[_flagID].status = 3;
+        publications[_newsID].rep -= votingPower;
+        userManager.decrementPublisherRep(publications[_newsID].publisher, votingPower);
+        for(uint i = 0; i < publications[_newsID].authors.length; i++) {
+            userManager.decrementUserRep(publications[_newsID].authors[i], votingPower); // increase authors rep score by 1
+        }
+        emit NewsDownvoted(_newsID, msg.sender, votingPower,
+        publications[_newsID].rep, "A news has been downvoted due to ignored flag");
         emit StakeWithdrawn(msg.sender, _flagID, stakes[_flagID], 
         "A flag has been ignored and the stake withdrawn");
         return _flagID;
@@ -380,6 +468,16 @@ contract NewsroomManager {
     function isDownvoter(address user, uint _newsID) public view
     returns(bool) {
         return newsDownvoters[_newsID][user];
+    }
+
+    function isUpvoterCF(address user, uint _flagID) public view
+    returns(bool) {
+        return CFUpvoters[_flagID][user];
+    }
+
+    function isDownvoterCF(address user, uint _flagID) public view
+    returns(bool) {
+        return CFDownvoters[_flagID][user];
     }
 
     function publicationExist(uint _newsID) public view

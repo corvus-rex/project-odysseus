@@ -730,14 +730,28 @@ export const ignoreFlag = async (req, res) => {
     };
     try{
         const flagID = req.body.flagID;
+        const votingPower = req.body.votingPower;
+        if (votingPower < 0) {
+            votingPower = -1
+        }
+        else if (votingPower > 10) {
+            votingPower = -10
+        }
+        else {
+            votingPower = -votingPower
+        }
         let publication = await Publication.findOneAndUpdate({
             'flags._id': flagID}, 
             {
-                'flags.$.status': "Ignored"
+                'flags.$.status': "Ignored",
+                $inc: {'rep': votingPower}
             })
+        await User.updateMany({'_id': {$in: publication.authors}}, {$inc: {'rep': votingPower}})
+        await Publisher.updateMany({'_id': publication.publisher}, {$inc: {'rep': votingPower}})
         console.log("Publication ", publication)
         res.status(200).send({flag: publication})
     }
+
     catch (err) {
         console.log(err.message);
         res.status(500).send("Error in Saving");

@@ -247,7 +247,10 @@ export default {
         }).on('receipt', receipt => {
           console.log(receipt)
           axios.post(
-            serverSide.ignoreFlag, {flagID: flag._id}
+            serverSide.ignoreFlag, {
+              flagID: flag._id,
+              votingPower: this.user.rep
+            }
           ).then((res) => {
             console.log(res.data.publication)
             this.$router.go()
