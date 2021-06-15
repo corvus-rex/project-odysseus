@@ -149,7 +149,7 @@ contract NewsroomManager {
         userManager = UserManager(contractAddr);
     }
 
-    function findIndexByAddr(address value, address[] memory arr ) private returns(uint) {
+    function findIndexByAddr(address value, address[] memory arr ) private pure returns(uint) {
         uint i = 0;
         while (arr[i] != value) {
             i++;
@@ -278,6 +278,7 @@ contract NewsroomManager {
         uint _flagID
         ) public
         returns(int) {
+            uint _newsID = flags[_flagID].newsID;
             require (userManager.isRegistered(msg.sender), 
             "This user is not registered!");
             require (userManager.getRep(msg.sender) > 0, 
@@ -286,9 +287,8 @@ contract NewsroomManager {
             "User already voted the news");
             require(!isDownvoterCF(msg.sender, _flagID), 
             "User already voted the news");
-            require(!userManager.isInPublisher(msg.sender, publications[_flagID].publisher),
+            require(!userManager.isInPublisher(msg.sender, publications[_newsID].publisher),
              "Voter is not allowed to vote on article of the same publisher");
-            uint _newsID = flags[_flagID].newsID;
             int votingPower = 0;
             if (userManager.getRep(msg.sender) > repLimit) {
                 votingPower = repLimit;
@@ -312,6 +312,7 @@ contract NewsroomManager {
         uint _flagID
         ) public
         returns(int) {
+            uint _newsID = flags[_flagID].newsID;
             require (userManager.isRegistered(msg.sender), 
             "This user is not registered!");
             require (userManager.getRep(msg.sender) > 0, 
@@ -320,9 +321,8 @@ contract NewsroomManager {
             "User already voted the news");
             require(!isDownvoterCF(msg.sender, _flagID), 
             "User already voted the news");
-            require(!userManager.isInPublisher(msg.sender, publications[_flagID].publisher),
+            require(!userManager.isInPublisher(msg.sender, publications[_newsID].publisher),
              "Voter is not allowed to vote on article of the same publisher");
-            uint _newsID = flags[_flagID].newsID;
             int votingPower = 0;
             if (userManager.getRep(msg.sender) > repLimit) {
                 votingPower = repLimit;

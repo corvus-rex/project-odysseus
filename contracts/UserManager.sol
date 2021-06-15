@@ -52,7 +52,7 @@ contract UserManager {
     mapping(string => bool) public usernameExistence;
     mapping(string => bool) public publisherNameExistence;
 
-    function findIndexByAddr(address value, address[] memory arr ) private returns(uint) {
+    function findIndexByAddr(address value, address[] memory arr ) private pure returns(uint) {
         uint i = 0;
         while (arr[i] != value) {
             i++;
