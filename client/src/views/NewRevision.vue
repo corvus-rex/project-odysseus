@@ -220,6 +220,8 @@ export default {
         var stringifiedPublication = JSON.stringify(toBeHashed)
         var hashedArticle = sha256.create()
         hashedArticle.update(stringifiedPublication)
+        var hashedTitle = sha256.create()
+        hashedTitle.update(this.newsTitle)
         const web3 = new Web3(
           new Web3.providers.HttpProvider(networkURL.networkURL))
         var newsroomManagerContract = new web3.eth.Contract(
@@ -230,14 +232,14 @@ export default {
         if (this.flag == null) {
           newsroomManagerContract.methods.createRevision(
               this.publication.chainID,
-              this.newsTitle,
+              hashedTitle.hex(),
               authorsKey,
               this.chiefOfficer.publicKey,
               hashedArticle.hex()
           ).send({
               from: address,
               gasPrice: 1,
-              gas: 300000
+              gas: 500000
           }).on('receipt', receipt => {
             console.log(receipt)
             console.log(receipt.events.NewsRevised.returnValues.newsID)

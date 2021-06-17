@@ -109,6 +109,7 @@ export default {
             publishedList: [],
             draftList: [],
             selectedPublication: null,
+            hashedTitle: sha256.create(),
             hashedDraft: sha256.create()
         }
     },
@@ -203,9 +204,11 @@ export default {
             console.log("To-be Hashed: ", toBeHashed)
             var stringifiedPublication = JSON.stringify(toBeHashed)
             this.hashedDraft.update(stringifiedPublication)
+            this.hashedTitle.update(this.selectedPublication.title)
             this.$bvModal.show('confirm-publish')
             console.log(stringifiedPublication)
             console.log(this.hashedDraft.hex())
+            console.log(this.hashedTitle.hex())
         },
         publishDraft() {
             console.log(this.selectedPublication)
@@ -229,14 +232,14 @@ export default {
               }
             )
             newsroomManagerContract.methods.publishDraft(
-                this.selectedPublication.title,
+                this.hashedTitle.hex(),
                 authorsKey,
                 this.chiefOfficer.publicKey,
                 this.hashedDraft.hex()
             ).send({
                 from: address,
                 gasPrice: 1,
-                gas: 300000
+                gas: 500000
             }).on('receipt', receipt => {
                 console.log(receipt.events.NewsPublished.returnValues.newsID)
                 var chainID = receipt.events.NewsPublished.returnValues.newsID

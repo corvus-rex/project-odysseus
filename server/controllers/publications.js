@@ -730,7 +730,7 @@ export const ignoreFlag = async (req, res) => {
     };
     try{
         const flagID = req.body.flagID;
-        const votingPower = req.body.votingPower;
+        var votingPower = req.body.votingPower;
         if (votingPower < 0) {
             votingPower = -1
         }
