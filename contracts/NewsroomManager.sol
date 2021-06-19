@@ -164,7 +164,8 @@ contract NewsroomManager {
         string memory _contentHash) public
         returns(uint) {
             require(userManager.isAuthor(msg.sender), "User is not a registered author");
-            require(userManager.isInPublisher(msg.sender, _publisher), "User with this public key already exist!");
+            require(userManager.isInPublisher(msg.sender, _publisher), 
+            "User does not belong in the publishing entity");
             publications[currentNews].title = _title;
             publications[currentNews].authors = _authors;
             publications[currentNews].publisher = _publisher;
@@ -189,8 +190,10 @@ contract NewsroomManager {
         ) public
         returns(uint) {
             require(userManager.isAuthor(msg.sender), "User is not a registered author");
-            require(userManager.isInPublisher(msg.sender, _publisher), "User with this public key already exist!");
-            require(publications[_newsID].nextVersion == NULL, "This publication already has a revision!");
+            require(userManager.isInPublisher(msg.sender, _publisher), 
+            "User does not belong in the publishin entity");
+            require(publications[_newsID].nextVersion == NULL, 
+            "This publication already has a revision!");
             publications[currentNews].title = _title;
             publications[currentNews].authors = _authors;
             publications[currentNews].publisher = _publisher;
@@ -351,7 +354,7 @@ contract NewsroomManager {
             require (userManager.isRegistered(msg.sender), 
             "This user is not registered!");
             require(!userManager.isInPublisher(msg.sender, publications[_newsID].publisher),
-                "Voter is not allowed to vote on article of the same publisher");
+            "Voter is not allowed to vote on article of the same publisher");
             require(publicationExist(_newsID), "News does not exist!");
             flags[currentFlag].subject = _subject;
             flags[currentFlag].flagger = payable(msg.sender);
@@ -398,8 +401,10 @@ contract NewsroomManager {
         uint _newsID = flags[_flagID].newsID;
         address _publisher = publications[_newsID].publisher;
         require(userManager.isAuthor(msg.sender), "User is not a registered author");
-        require(userManager.isInPublisher(msg.sender, _publisher), "User with this public key already exist!");
-        require(publications[_newsID].nextVersion == NULL, "This publication already has a revision!");
+        require(userManager.isInPublisher(msg.sender, _publisher), 
+        "User does not belong in the publishin entity");
+        require(publications[_newsID].nextVersion == NULL, 
+        "This publication already has a revision!");
         publications[currentNews].title = _title;
         publications[currentNews].authors = _authors;
         publications[currentNews].publisher = _publisher;
