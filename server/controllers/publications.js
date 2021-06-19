@@ -2,14 +2,10 @@ import {validationResult} from 'express-validator';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import {Publisher, Publication} from '../models/publications.js';
-import {registerUser, electAuthorship, revokeAuthorship} from './callContract.js';
-import multer from 'multer';
 import { User } from '../models/users.js';
 
 const logoPath = '/uploads/logo'
-const logoPathSave = '../uploads/logo'
 const evidencePath = '/uploads/flagEvidence'
-const evidencePathSave = '../uploads/flagEvidence'
 
 export const registerPublisher = async (req, res) => {
     const errors = validationResult(req);
@@ -20,21 +16,14 @@ export const registerPublisher = async (req, res) => {
     try{
         const pubName = req.body.name;
         const chiefOfficer = req.body.chiefOfficer;
-        const logo = req.body.logo;
-        const logoStorage = multer.diskStorage({
-            destination: function (req, file, cb) {
-                cb(null, logoPathSave)
-            },
-            filename: function (req, file, cb) {
-                cb(null, req.body.filename);
-            }
-        })
-        const uploadImg = multer({storage: logoStorage}).fields([
-            {name: 'logo', maxCount: 1}
-        ]);
+        const filename = req.body.filename;
         let publisher = await Publisher.findOne({'name': pubName})
         if (publisher) {
             return res.status(400).json({msg: "Publisher with same name already exist"});
+        };
+        publisher = await Publisher.findOne({'chiefOfficer': chiefOfficer})
+        if (publisher) {
+            return res.status(400).json({msg: "User already has a publisher entity"});
         };
         await User.findOneAndUpdate({
             '_id': chiefOfficer
@@ -47,15 +36,10 @@ export const registerPublisher = async (req, res) => {
         publisher = new Publisher({
             name: pubName,
             chiefOfficer: chiefOfficer,
-            logo: logoPath + req.body.filename
+            logo: logoPath + "/" + req.body.name + "_" + req.body.chiefOfficer + "_" + 
+            req.body.filename
         })
         await publisher.save();
-        uploadImg(req, res, function(err) {
-            if (err) {
-                console.log(err)
-                res.status(500).send("Error in Saving");
-            }
-        })
         console.log(user)
         res.status(200).send({user: user})
     }
@@ -118,26 +102,45 @@ export const acceptAuthorship = async (req, res) => {
     try {
         let userID = req.body.userID
         let publisherID = req.body.publisherID
-        let newAuthor = req.body.publicKey
-        let user = await User.findOneAndUpdate({'_id': userID}, {'role': "Author", 'hasPublisher': true})
-        var publisherObj
-        let publisher = await Publisher.findOne({'_id': publisherID}, function(err, obj) {
-            publisherObj = obj
-        })
-        console.log(publisherObj)
-        let chiefOfficer = await User.findOne({'_id': publisherObj.chiefOfficer})
-        let pendingAuthors = publisherObj.pendingAuthors.filter((author) => {
-            return author != userID
-        })
-        publisherObj.authors.push(userID)
-        console.log(publisherObj.authors)
-        publisher = await Publisher.findOneAndUpdate({'_id': publisherID}, 
-        {'authors': publisherObj.authors, 'pendingAuthors': pendingAuthors})
+        let publisher = await Publisher.findOneAndUpdate(
+            {'_id': publisherID}, 
+            {
+                $push: {'acceptedAuthors': userID}
+            })
+        let user = await User.findOne({'_id': userID})
+        res.status(200).send({publisher: publisher, user: user})
+    }
+    catch (err) {
+        console.log(err.message);
+        res.status(500).send("Error in Fetching");
+    }
+}
+
+export const registerAuthor = async (req, res) => {
+    const errors = validationResult(req);
+    console.log(req.body)
+    if (!errors.isEmpty()) {
+        res.status(400).json({errors: errors.array()});
+    };
+    try {
+        let authorID = req.body.authorID
+        let publisherID = req.body.publisherID
+        let user = await User.findOneAndUpdate({'_id': authorID}, {'role': "Author", 'hasPublisher': true})
         await user.save()
+        user = await User.findOne({'_id': authorID})
+        let publisher = await Publisher.findOneAndUpdate(
+            {'_id': publisherID},
+            {
+                $pull: {
+                    'pendingAuthors': authorID,
+                    'acceptedAuthors': authorID
+                },
+                $push: {
+                    'authors': authorID
+                }
+            }
+        )
         await publisher.save()
-        user = await User.findOne({'_id': userID})
-        publisher = await Publisher.findOne({'_id': publisherID})
-        electAuthorship(chiefOfficer.publicKey, newAuthor)
         res.status(200).send({publisher: publisher, user: user})
     }
     catch (err) {
@@ -187,7 +190,6 @@ export const revokeAuthor = async (req, res) => {
         }, function(err, obj) {
             chiefOfficerKey = obj.publicKey
         })
-        revokeAuthorship(chiefOfficerKey, authorKey)
         res.status(200).send({publisher: updatedPublisher})
     }
     catch (err) {
@@ -365,11 +367,14 @@ export const publishDraft = async (req, res) => {
         let draft = req.body.draft
         let draftID = req.body.draft._id
         let approver = req.body.approver
+        let chainID = parseInt(req.body.chainID)
+        console.log("Chain ID: ", chainID)
         let authors = []
         let publication = await Publication.findOneAndUpdate({'_id': draftID}, {
             'status': 'Published',
             'datePublished': Date.now(),
-            'approver': approver
+            'approver': approver,
+            'chainID': chainID
         }, function(err, obj) {
             authors = obj.authors
         })
@@ -407,6 +412,7 @@ export const newRevision = async (req, res) => {
         let content = req.body.article
         let flaggerID = req.body.flaggerID
         let flagID = req.body.flagID
+        let chainID = req.body.chainID
         let authors = []
         let currentAuthorsID = []
         let publication = await Publication.findOne({'_id': publicationID}, 
@@ -460,7 +466,8 @@ export const newRevision = async (req, res) => {
                 status: 'Published',
                 prevVersions: prevVersions,
                 flagger: flaggerID,
-                flags: flags
+                flags: flags,
+                chainID: chainID
             })
         }
         else {
@@ -474,7 +481,8 @@ export const newRevision = async (req, res) => {
                 authors: authors,
                 publisher: publisherID,
                 status: 'Published',
-                prevVersions: prevVersions
+                prevVersions: prevVersions,
+                chainID: chainID
             })
         }
         await revisedPublication.save()
@@ -514,6 +522,7 @@ export const submitFlag = async (req, res) => {
         const userID = req.body.userID;
         const username = req.body.username;
         const flagWriteup = req.body.flagWriteup;
+        const chainID = req.body.chainID;
         let flags = []
         let flagIndex = 0
         let evidenceName = ""
@@ -526,6 +535,7 @@ export const submitFlag = async (req, res) => {
             })
         var newFlag = {
             subject: flagSubject,
+            chainID: chainID,
             dateSubmitted: Date.now(),
             status: "Pending",
             flaggerID: userID,
@@ -707,6 +717,42 @@ export const castVoteCF = async (req, res) => {
         }
     }
     catch(err) {
+        console.log(err.message);
+        res.status(500).send("Error in Saving");
+    }
+}
+
+export const ignoreFlag = async (req, res) => {
+    const errors = validationResult(req);
+    console.log(req.body)
+    if (!errors.isEmpty()) {
+        return res.status(400).json({errors: errors.array()});
+    };
+    try{
+        const flagID = req.body.flagID;
+        var votingPower = req.body.votingPower;
+        if (votingPower < 0) {
+            votingPower = -1
+        }
+        else if (votingPower > 10) {
+            votingPower = -10
+        }
+        else {
+            votingPower = -votingPower
+        }
+        let publication = await Publication.findOneAndUpdate({
+            'flags._id': flagID}, 
+            {
+                'flags.$.status': "Ignored",
+                $inc: {'rep': votingPower}
+            })
+        await User.updateMany({'_id': {$in: publication.authors}}, {$inc: {'rep': votingPower}})
+        await Publisher.updateMany({'_id': publication.publisher}, {$inc: {'rep': votingPower}})
+        console.log("Publication ", publication)
+        res.status(200).send({flag: publication})
+    }
+
+    catch (err) {
         console.log(err.message);
         res.status(500).send("Error in Saving");
     }

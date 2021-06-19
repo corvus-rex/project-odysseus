@@ -44,6 +44,10 @@ import Nav from '../components/Nav'
 import appName from '../appName'
 import serverSide from '../serverSide'
 import axios from 'axios'
+import Web3 from 'web3'
+import networkURL from '../../../contracts/networkURL.js'
+import newsroomManagerABI  from "../../../contracts/ABI/abi_newsroommanager.json"
+import newsroomManagerReceipt from '../../../contracts/receipts/receipt_newsroommanager.json'
 
 export default {
   name: 'Home',
@@ -118,32 +122,70 @@ export default {
           }
           else if (this.user.rep > 10) {
             let votingPower = 10
-            axios.post(serverSide.castVote, {
-              voterID: this.user._id,
-              votingPower: votingPower,
-              publicationID: news._id
-            })
-            .then(() => {
-              this.votingList[news._id].rep += votingPower
-              this.votingList[news._id].upvoted = true
-              alert("Vote Casted")
-              console.log("Voting List: ", this.votingList[news._id])
-              this.$router.go()
+            let address = window.ethereum.selectedAddress
+            let web3 = new Web3(
+              new Web3.providers.HttpProvider(networkURL.networkURL))
+            let newsroomManagerContract = new web3.eth.Contract(
+              newsroomManagerABI, newsroomManagerReceipt.contractAddress, {
+                from: address
+              }
+            )
+            newsroomManagerContract.methods.upvoteNews(
+              news.chainID
+            ).send({
+                from: address,
+                gasPrice: 1,
+                gas: 300000
+            }).on('receipt', receipt => {
+              console.log(receipt)
+              axios.post(serverSide.castVote, {
+                voterID: this.user._id,
+                votingPower: votingPower,
+                publicationID: news._id
+              })
+              .then(() => {
+                this.votingList[news._id].rep += votingPower
+                this.votingList[news._id].upvoted = true
+                alert("Vote Casted")
+                console.log("Voting List: ", this.votingList[news._id])
+                this.$router.go()
+              })
+            }).on('error', err => {
+              console.log(err)
             })
           }
           else if (this.user.rep < 10) {
             let votingPower = this.user.rep
-            axios.post(serverSide.castVote, {
-              voterID: this.user._id,
-              votingPower: votingPower,
-              publicationID: news._id
-            })
-            .then(() => {
-              this.votingList[news._id].rep += votingPower
-              this.votingList[news._id].upvoted = true
-              alert("Vote Casted")
-              console.log("Voting List: ", this.votingList[news._id])
-              this.$router.go()
+            let address = window.ethereum.selectedAddress
+            let web3 = new Web3(
+              new Web3.providers.HttpProvider(networkURL.networkURL))
+            let newsroomManagerContract = new web3.eth.Contract(
+              newsroomManagerABI, newsroomManagerReceipt.contractAddress, {
+                from: address
+              }
+            )
+            newsroomManagerContract.methods.upvoteNews(
+              news.chainID
+            ).send({
+                from: address,
+                gasPrice: 1,
+                gas: 300000
+            }).on('receipt', receipt => {
+              console.log(receipt)
+              axios.post(serverSide.castVote, {
+                voterID: this.user._id,
+                votingPower: votingPower,
+                publicationID: news._id
+              })
+              .then(() => {
+                this.votingList[news._id].rep += votingPower
+                this.votingList[news._id].upvoted = true
+                alert("Vote Casted")
+                console.log("Voting List: ", this.votingList[news._id])
+                this.$router.go()
+              })
+            }).on('error', err => {
+              console.log(err)
             })
           }
         })
@@ -176,33 +218,71 @@ export default {
             return
           }
           else if (this.user.rep > 10) {
-            var votingPower = -10
-            axios.post(serverSide.castVote, {
-              voterID: this.user._id,
-              votingPower: votingPower,
-              publicationID: news._id
-            })
-            .then(() => {
-              this.votingList[news._id].rep += votingPower
-              this.votingList[news._id].downvoted = true
-              alert("Vote Casted")
-              console.log("Voting List: ", this.votingList[news._id])
-              this.$router.go()
+            let votingPower = -10
+            let address = window.ethereum.selectedAddress
+            let web3 = new Web3(
+              new Web3.providers.HttpProvider(networkURL.networkURL))
+            let newsroomManagerContract = new web3.eth.Contract(
+              newsroomManagerABI, newsroomManagerReceipt.contractAddress, {
+                from: address
+              }
+            )
+            newsroomManagerContract.methods.downvoteNews(
+              news.chainID
+            ).send({
+                from: address,
+                gasPrice: 1,
+                gas: 300000
+            }).on('receipt', receipt => {
+              console.log(receipt)
+              axios.post(serverSide.castVote, {
+                voterID: this.user._id,
+                votingPower: votingPower,
+                publicationID: news._id
+              })
+              .then(() => {
+                this.votingList[news._id].rep += votingPower
+                this.votingList[news._id].downvoted = true
+                alert("Vote Casted")
+                console.log("Voting List: ", this.votingList[news._id])
+                this.$router.go()
+              })
+            }).on('error', err => {
+              console.log(err)
             })
           }
           else if (this.user.rep < 10) {
             let votingPower = -this.user.rep
-            axios.post(serverSide.castVote, {
-              voterID: this.user._id,
-              votingPower: votingPower,
-              publicationID: news._id
-            })
-            .then(() => {
-              this.votingList[news._id].rep += votingPower
-              this.votingList[news._id].downvoted = true
-              alert("Vote Casted")
-              console.log("Voting List: ", this.votingList[news._id])
-              this.$router.go()
+            let address = window.ethereum.selectedAddress
+            let web3 = new Web3(
+              new Web3.providers.HttpProvider(networkURL.networkURL))
+            let newsroomManagerContract = new web3.eth.Contract(
+              newsroomManagerABI, newsroomManagerReceipt.contractAddress, {
+                from: address
+              }
+            )
+            newsroomManagerContract.methods.downvoteNews(
+              news.chainID
+            ).send({
+                from: address,
+                gasPrice: 1,
+                gas: 300000
+            }).on('receipt', receipt => {
+              console.log(receipt)
+              axios.post(serverSide.castVote, {
+                voterID: this.user._id,
+                votingPower: votingPower,
+                publicationID: news._id
+              })
+              .then(() => {
+                this.votingList[news._id].rep += votingPower
+                this.votingList[news._id].downvoted = true
+                alert("Vote Casted")
+                console.log("Voting List: ", this.votingList[news._id])
+                this.$router.go()
+              })
+            }).on('error', err => {
+              console.log(err)
             })
           }
         })

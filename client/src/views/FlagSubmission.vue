@@ -46,6 +46,11 @@ import appName from '../appName'
 import path from 'path'
 import serverSide from '../serverSide'
 import axios from 'axios'
+import Web3 from 'web3'
+import sha256 from 'js-sha256'
+import networkURL from '../../../contracts/networkURL.js'
+import newsroomManagerABI  from "../../../contracts/ABI/abi_newsroommanager.json"
+import newsroomManagerReceipt from '../../../contracts/receipts/receipt_newsroommanager.json'
 // import {registerPublisher} from '../contracts/callContract'
 
 export default {
@@ -58,7 +63,8 @@ export default {
             flagWriteup: '',
             flagEvidence: null,
             flagIndex: 0,
-            publicationID: ''
+            publicationID: '',
+            publication: {}
         }
     },
     components: {
@@ -69,49 +75,82 @@ export default {
             this.flagEvidence = event.target.files[0]
             console.log(this.flagEvidence)
         },
+        getPublication() {
+          this.publicationID = this.$route.query.id
+          axios.post(serverSide.getPublication, {publicationID: this.publicationID})
+          .then((res) => {
+            this.publication = res.data.publication[0]
+          })
+        },
         submitFlag() {
-            // if (typeof window.ethereum !== 'undefined') {
-            //   window.ethereum.request({ method: 'eth_requestAccounts' });
-            // }
-            // else {
-            //   alert('Please install MetaMask!')
-            // }
-            // var address = window.ethereum.selectedAddress
-            // registerPublisher(this.pubName, address)
-            var formData = new FormData()
-            formData.append('flagSubject', this.flagSubject)
-            formData.append('flagWriteup', this.flagWriteup)
-            formData.append('userID', this.user._id)
-            formData.append('username', this.user.username)
-            formData.append('publicationID', this.publicationID)
-            formData.append('filename', this.flagEvidence.name)
-            formData.append('flagIndex', this.flagIndex)
-            formData.append('flagEvidence', this.flagEvidence)
-            console.log("Filename: ", this.flagEvidence.name)
-            console.log("MIME Type: ", this.flagEvidence.type)
-            console.log("Extension Name: ", path.extname(this.flagEvidence.name))
-            console.log(formData)
-            axios({
-                method: "POST",
-                url: serverSide.submitFlag,
-                data: formData,
-                headers: {"Content-type": "multipart/form-data"}
+            var hashedContent = sha256.create()
+            hashedContent.update(this.flagWriteup)
+            if (typeof window.ethereum !== 'undefined') {
+              window.ethereum.request({ method: 'eth_requestAccounts' });
+            }
+            else {
+              alert('Please install MetaMask!')
+            }
+            let address = window.ethereum.selectedAddress
+            let web3 = new Web3(
+              new Web3.providers.HttpProvider(networkURL.networkURL))
+            let newsroomManagerContract = new web3.eth.Contract(
+              newsroomManagerABI, newsroomManagerReceipt.contractAddress, {
+                from: address
+              }
+            )
+            newsroomManagerContract.methods.submitFlag(
+              this.flagSubject,
+              hashedContent.hex(),
+              this.publication.chainID,
+              7200
+            ).send({
+                from: address,
+                gasPrice: 1,
+                gas: 300000,
+                value: Web3.utils.toWei('1', 'ether')
+            }).on('receipt', receipt => {
+              console.log(receipt)
+              var chainID = receipt.events.FlagCreated.returnValues.flagID
+              var formData = new FormData()
+              formData.append('flagSubject', this.flagSubject)
+              formData.append('flagWriteup', this.flagWriteup)
+              formData.append('userID', this.user._id)
+              formData.append('username', this.user.username)
+              formData.append('publicationID', this.publicationID)
+              formData.append('filename', this.flagEvidence.name)
+              formData.append('flagIndex', this.flagIndex)
+              formData.append('chainID', chainID)
+              formData.append('flagEvidence', this.flagEvidence)
+              console.log("Filename: ", this.flagEvidence.name)
+              console.log("MIME Type: ", this.flagEvidence.type)
+              console.log("Extension Name: ", path.extname(this.flagEvidence.name))
+              console.log(formData)
+              axios({
+                  method: "POST",
+                  url: serverSide.submitFlag,
+                  data: formData,
+                  headers: {"Content-type": "multipart/form-data"}
+              })
+              .then((res) => {
+                console.log(res.data.publication)
+                this.$router.push({name: "news", query:{id: this.publicationID}})
+              })
+              .catch(function (error) {
+                  console.error(error.response);
+              });
+            }).on('error', err => {
+              console.log(err)
             })
-            .then((res) => {
-              console.log(res.data.publication)
-              this.$router.push({name: "news", query:{id: this.publicationID}})
-            })
-            .catch(function (error) {
-                console.error(error.response);
-            });
         }
     },
-    created: function() {
+    created: async function() {
         var user = localStorage.getItem('user')
         var userParsed = JSON.parse(user)
         this.user = userParsed
         this.publicationID = this.$route.query.id
         this.flagIndex = this.$route.query.flagIndex
+        await this.getPublication()
     }
 }
 </script>

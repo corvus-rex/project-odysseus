@@ -148,8 +148,7 @@ export default {
       promises.push(
         axios.post(serverSide.acceptAuthorship, {
           userID: userParsed._id,
-          publisherID: notif.data.publisher,
-          publicKey: userParsed.publicKey
+          publisherID: notif.data.publisher
         })
         .then(res => {
           const user = res.data.user

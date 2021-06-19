@@ -17,6 +17,9 @@ export const inviteAuthor = async (req, res) => {
         let toEmail = req.body.recipientEmail
         let senderUser = await User.findOne({'_id': sender})
         let toUser = await User.findOne({'email': toEmail})
+        if (!toUser) {
+            return res.status(400).json({msg: "User not found"})
+        }
         let to = toUser._id
         let publisher = await Publisher.findOne({'chiefOfficer': sender})
         let publisherID = publisher._id

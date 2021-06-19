@@ -2,70 +2,30 @@ import Web3 from 'web3'
 import networkURL from '../../contracts/networkURL.js'
 import { createRequire } from "module";
 const require = createRequire(import.meta.url); // construct the require method
-const registrationABI = require("../../contracts/register/abi_register.json")
-const registrationReceipt = require('../../contracts/register/receipt_register.json')
+const userManagerABI = require("../../contracts/ABI/abi_usermanager.json")
+const userManagerReceipt = require('../../contracts/receipts/receipt_usermanager.json')
 
-export function registerUser(email, publicKey) {
+export function registerUser(username, publicKey) {
      
-    var abi = registrationABI
-    var receipt = registrationReceipt
+    var abi = userManagerABI
+    var receipt = userManagerReceipt
     var contractAddress = receipt.contractAddress
     const web3 = new Web3(new Web3.providers.HttpProvider(networkURL.networkURL))
     web3.eth.getAccounts().then((accounts) => {
-        var registrationContract = new web3.eth.Contract(abi, contractAddress, {
+        var userManagerContract = new web3.eth.Contract(abi, contractAddress, {
             from: accounts[0]
         })
         if(!web3.utils.isAddress(publicKey)){
             console.log('invalid public address')
         }
-        registrationContract.methods.newUser(email, publicKey).send({
-            from: accounts[0]
+        userManagerContract.methods.newUser(username, publicKey).send({
+            from: accounts[0],
+            gasPrice: 1,
+            gas: 200000
         }).on('receipt', (receipt) => {
             console.log(receipt)
+        }).on('error', err => {
+            console.log(err)
         })
     })
-    
-}
-
-export function electAuthorship(chiefOfficer, newAuthor) {
-     
-    var abi = registrationABI
-    var receipt = registrationReceipt
-    var contractAddress = receipt.contractAddress
-    const web3 = new Web3(new Web3.providers.HttpProvider(networkURL.networkURL))
-    web3.eth.getAccounts().then((accounts) => {
-        var registrationContract = new web3.eth.Contract(abi, contractAddress, {
-            from: accounts[0]
-        })
-        if(!web3.utils.isAddress(newAuthor)){
-            console.log('invalid public address')
-        }
-        registrationContract.methods.electAuthorship(chiefOfficer, newAuthor).send({
-            from: accounts[0]
-        }).on('receipt', (receipt) => {
-            console.log(receipt)
-        })
-    })
-    
-}
-export function revokeAuthorship(chiefOfficer, author) {
-     
-    var abi = registrationABI
-    var receipt = registrationReceipt
-    var contractAddress = receipt.contractAddress
-    const web3 = new Web3(new Web3.providers.HttpProvider(networkURL.networkURL))
-    web3.eth.getAccounts().then((accounts) => {
-        var registrationContract = new web3.eth.Contract(abi, contractAddress, {
-            from: accounts[0]
-        })
-        if(!web3.utils.isAddress(author)){
-            console.log('invalid public address')
-        }
-        registrationContract.methods.revokeAuthorship(chiefOfficer, author).send({
-            from: accounts[0]
-        }).on('receipt', (receipt) => {
-            console.log(receipt)
-        })
-    })
-    
 }

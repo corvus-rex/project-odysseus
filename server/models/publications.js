@@ -19,6 +19,10 @@ const PublisherSchema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     }],
+    acceptedAuthors: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }],
     rep: {
         type: Number,
         default: 0
@@ -35,6 +39,10 @@ const PublicationSchema = mongoose.Schema({
     revised: {
         type: Boolean,
         default: false
+    },
+    chainID: {
+        type: Number,
+        default: -1
     },
     prevVersions: [{
         type: mongoose.Schema.Types.ObjectId,
@@ -77,6 +85,7 @@ const PublicationSchema = mongoose.Schema({
     flags: [{
         subject: String,
         dateSubmitted: Date,
+        chainID: Number,
         expirySeconds: {
             type: Number,
             default: 7200

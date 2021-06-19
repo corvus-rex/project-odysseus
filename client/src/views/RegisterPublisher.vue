@@ -38,11 +38,15 @@
 </template>
 
 <script>
+import Web3 from 'web3'
+import networkURL from '../../../contracts/networkURL.js'
+import userManagerABI  from "../../../contracts/ABI/abi_usermanager.json"
+import userManagerReceipt from '../../../contracts/receipts/receipt_usermanager.json'
+
 import Nav from '../components/Nav'
 import appName from '../appName'
 import serverSide from '../serverSide'
 import axios from 'axios'
-import {registerPublisher} from '../contracts/callContract'
 
 export default {
     name: 'RegisterPublisher',
@@ -69,30 +73,46 @@ export default {
             }
             else {
               alert('Please install MetaMask!')
+              return
             }
             var address = window.ethereum.selectedAddress
-            registerPublisher(this.pubName, address)
-            var formData = new FormData()
-            formData.append('name', this.pubName)
-            formData.append('logo', this.logo_data)
-            formData.append('chiefOfficer', this.userID)
-            formData.append('filename', this.logo_data.name)
-            axios({
-                method: "POST",
-                url: serverSide.registerPublisher,
-                data: formData,
-                headers: {"Content-type": "multipart/form-data"}
+            const web3 = new Web3(
+              new Web3.providers.HttpProvider(networkURL.networkURL))
+            var userManagerContract = new web3.eth.Contract(
+              userManagerABI, userManagerReceipt.contractAddress, {
+                from: address
+              }
+            )
+            userManagerContract.methods.registerPublisher(this.pubName).send({
+                from: address,
+                gasPrice: 1,
+                gas: 200000
+            }).on('receipt', (receipt) => {
+              console.log(receipt)
+              var formData = new FormData()
+              formData.append('name', this.pubName)
+              formData.append('chiefOfficer', this.userID)
+              formData.append('filename', this.logo_data.name)
+              formData.append('logo', this.logo_data)
+              axios({
+                  method: "POST",
+                  url: serverSide.registerPublisher,
+                  data: formData,
+                  headers: {"Content-type": "multipart/form-data"}
+              })
+              .then((resp) => {          
+                  localStorage.removeItem('user')
+                  const user = resp.data.user
+                  const userJSON = JSON.stringify(user)
+                  localStorage.setItem('user', userJSON)
+                  this.$router.push({name: "profile"})
+              })
+              .catch(function (error) {
+                  console.error(error.response);
+              });
+            }).on('error', err => {
+                console.log(err)
             })
-            .then((resp) => {          
-                localStorage.removeItem('user')
-                const user = resp.data.user
-                const userJSON = JSON.stringify(user)
-                localStorage.setItem('user', userJSON)
-                this.$router.push({name: "profile"})
-            })
-            .catch(function (error) {
-                console.error(error.response);
-            });
         }
     },
     created: function() {

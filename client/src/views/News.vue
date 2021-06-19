@@ -13,7 +13,8 @@
        Display Flag Submissions </b-button>
       <b-button id="check-hash" 
       variant="primary"
-      class="mt-5 ml-3">
+      class="mt-5 ml-3"
+      @click="checkHash()">
        Check Hash Validity </b-button>
       <div class="mt-5" v-html="news.article"/>
     </b-card>
@@ -50,6 +51,14 @@
             class="btn btn-primary">
             View Rejection</router-link>
           </div>
+          <div v-if="flag.flaggerID === user._id">
+            <b-button v-if="flagStatus[flag._id] === 'Ignored' & flag.status != 'Ignored'" 
+            id="claim-stake"
+            variant="secondary"
+            @click="claimStake(flag)">
+              Claim Stake
+            </b-button>
+          </div>
         </b-list-group-item>
       </b-list-group>
       <p v-else>No flags to display</p>
@@ -62,7 +71,12 @@ import Nav from '../components/Nav'
 import appName from '../appName'
 import serverSide from '../serverSide'
 import axios from 'axios'
-// import {registerPublisher} from '../contracts/callContract'
+import sha256 from 'js-sha256'
+
+import Web3 from 'web3'
+import networkURL from '../../../contracts/networkURL.js'
+import newsroomManagerABI  from "../../../contracts/ABI/abi_newsroommanager.json"
+import newsroomManagerReceipt from '../../../contracts/receipts/receipt_newsroommanager.json'
 
 export default {
     name: 'news',
@@ -73,7 +87,8 @@ export default {
             publisher: null,
             isAuthorsBool: false,
             newsID: "",
-            news: {}
+            news: {},
+            flagStatus: {}
         }
     },
     components: {
@@ -143,17 +158,104 @@ export default {
         var now = Date.now().valueOf()
         var timeDiff = (now - Date.parse(flag.dateSubmitted)) / 1000
         if (flag.status == "Accepted") {
+          this.flagStatus[flag._id] = "Accepted"
+          console.log(this.flagStatus)
           return "Accepted"
         }
         else if (flag.status == "Rejected") {
+          this.flagStatus[flag._id] = "Rejected"
+          console.log(this.flagStatus)
           return "Rejected"
         }
         else if (timeDiff < flag.expirySeconds) {
+          this.flagStatus[flag._id] = "Pending"
+          console.log(this.flagStatus)
           return "Pending"
         }
         else {
+          this.flagStatus[flag._id] = "Ignored"
+          console.log(this.flagStatus)
           return "Ignored"
         }
+      },
+      checkHash() {
+        var toBeHashed = {
+          title: this.news.title, 
+          article: this.news.article, 
+          description: this.news.description,
+          publisher: this.news.publisher, 
+          tags: this.news.tags, 
+          locations: this.news.locations
+        }
+        console.log("To-be Hashed: ", toBeHashed)
+        var stringifiedPublication = JSON.stringify(toBeHashed)
+        var hashedArticle = sha256.create()
+        hashedArticle.update(stringifiedPublication)
+        if (typeof window.ethereum !== 'undefined') {
+          window.ethereum.request({ method: 'eth_requestAccounts' });
+        }
+        else {
+          alert('Please install MetaMask!')
+        }
+        let address = window.ethereum.selectedAddress
+        const web3 = new Web3(
+          new Web3.providers.HttpProvider(networkURL.networkURL))
+        var newsroomManagerContract = new web3.eth.Contract(
+          newsroomManagerABI, newsroomManagerReceipt.contractAddress, {
+            from: address
+          }
+        )
+        newsroomManagerContract.methods.getHash(
+          this.news.chainID
+        ).call(
+          {from: address}
+        ).then(function(res) {
+          console.log(res)
+          var thisHash = hashedArticle.hex()
+          console.log('thisHash: ', thisHash)
+          if (thisHash === res) {
+            alert("This article hasn't been tampered\n ------------- \nLocal Hash: " 
+            + thisHash + "\n" + "Blockchain Hash: " + res)
+          }
+          else {
+            alert("This article has been tampered!\n ------------- \nLocal Hash: " 
+            + thisHash + "\n" + "Blockchain Hash: " + res)
+          }
+        })
+      },
+      claimStake(flag) {
+        if (typeof window.ethereum !== 'undefined') {
+          window.ethereum.request({ method: 'eth_requestAccounts' });
+        }
+        else {
+          alert('Please install MetaMask!')
+        }
+        let address = window.ethereum.selectedAddress
+        const web3 = new Web3(
+          new Web3.providers.HttpProvider(networkURL.networkURL))
+        var newsroomManagerContract = new web3.eth.Contract(
+          newsroomManagerABI, newsroomManagerReceipt.contractAddress, {
+            from: address
+          }
+        )
+        newsroomManagerContract.methods.withdrawStake(
+          flag.chainID
+        ).send({
+            from: address,
+            gasPrice: 1,
+            gas: 300000
+        }).on('receipt', receipt => {
+          console.log(receipt)
+          axios.post(
+            serverSide.ignoreFlag, {
+              flagID: flag._id,
+              votingPower: this.user.rep
+            }
+          ).then((res) => {
+            console.log(res.data.publication)
+            this.$router.go()
+          })
+        })
       }
     },
     created: async function() {

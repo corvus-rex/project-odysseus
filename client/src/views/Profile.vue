@@ -83,6 +83,25 @@
                     <b-button v-if="authEmails.length != 0" 
                     variant="primary" @click="inviteAuthors()">Invite</b-button>
                 </b-card>
+                <b-card style="width: 30rem;" v-if="publishing && hasPublisher"
+                 title="These authors have accepted invitation" class="mt-3 ml-1">
+                    <b-list-group class="mt-3">
+                        <b-list-group-item v-for="author in acceptedAuthors" :key="author">
+                            <b-container>
+                                <b-row style="font-size: 1rem;"> {{ author.email }} </b-row>
+                                <b-row align-h="end">
+                                    <b-col style="display: inline-block; vertical-align: top"> @{{ author.username }} </b-col>
+                                    <b-col>
+                                        <b-button class="confirm-button" 
+                                        variant="primary" 
+                                        v-if="isChief"
+                                        @click="registerAuthor(author)">Register</b-button>
+                                    </b-col>
+                                </b-row>
+                            </b-container>
+                        </b-list-group-item>
+                    </b-list-group>
+                </b-card>
             </div>
         </div>
         <b-modal id="inviteauth-modal" 
@@ -123,6 +142,11 @@
 </template>
 
 <script>
+import Web3 from 'web3'
+import networkURL from '../../../contracts/networkURL.js'
+import userManagerABI  from "../../../contracts/ABI/abi_usermanager.json"
+import userManagerReceipt from '../../../contracts/receipts/receipt_usermanager.json'
+
 import Nav from '../components/Nav'
 import appName from '../appName'
 import serverSide from '../serverSide'
@@ -149,7 +173,8 @@ export default {
             chiefOfficer: null,
             isChief: false,
             authEmailsInput: [],
-            authEmails: []
+            authEmails: [],
+            acceptedAuthors: []
         }
     },
     props: {
@@ -193,7 +218,31 @@ export default {
         },
         getAuthorsData() {
             let promises = []
-            console.log(this.publisher.authors)
+            console.log(this.publisher.acceptedAuthors)
+            this.publisher.acceptedAuthors.forEach(userID => {
+                promises.push(
+                    axios.post(serverSide.findUserByID, {userID: userID})
+                    .then(res => {
+                        console.log(res.data)
+                        let id = res.data.user._id
+                        let firstName = res.data.user.firstName
+                        let lastName = res.data.user.lastName
+                        let username = res.data.user.username
+                        let email = res.data.user.email
+                        let rep = res.data.user.rep
+                        let publicKey = res.data.user.publicKey
+                        this.acceptedAuthors.push({
+                            id: id,
+                            firstName: firstName, 
+                            lastName: lastName,
+                            username: username,
+                            email: email,
+                            rep: rep,
+                            publicKey: publicKey
+                        })
+                    })
+                )
+            })
             this.publisher.authors.forEach(userID => {
                 promises.push(
                     axios.post(serverSide.findUserByID, {userID: userID})
@@ -243,16 +292,73 @@ export default {
             Promise.all(promises).then(() => this.$router.go())
         },
         revokeAuthor(authorID, publicKey, publisherID) {
-            console.log(authorID)
-            axios.post(serverSide.revokeAuthorship,
-            {
-                authorID: authorID,
-                authorKey: publicKey,
-                publisherID: publisherID
+            if (typeof window.ethereum !== 'undefined') {
+              window.ethereum.request({ method: 'eth_requestAccounts' });
+            }
+            else {
+              alert('Please install MetaMask!')
+              return
+            }
+            var address = window.ethereum.selectedAddress
+            const web3 = new Web3(
+              new Web3.providers.HttpProvider(networkURL.networkURL))
+            var userManagerContract = new web3.eth.Contract(
+              userManagerABI, userManagerReceipt.contractAddress, {
+                from: address
+              }
+            )
+            userManagerContract.methods.revokeAuthorship(publicKey).send({
+                from: address,
+                gasPrice: 1,
+                gas: 200000
+            }).on('receipt', receipt => {
+                console.log(receipt)
+                axios.post(serverSide.revokeAuthorship,
+                {
+                    authorID: authorID,
+                    authorKey: publicKey,
+                    publisherID: publisherID
+                })
+                .then( res => {
+                    console.log(res.data.publisher)
+                    this.$router.go()
+                })
+            }).on('error', err => {
+                console.log(err)
             })
-            .then( res => {
-                console.log(res.data.publisher)
-                this.$router.go()
+        },
+        registerAuthor(author) {
+            if (typeof window.ethereum !== 'undefined') {
+              window.ethereum.request({ method: 'eth_requestAccounts' });
+            }
+            else {
+              alert('Please install MetaMask!')
+              return
+            }
+            var address = window.ethereum.selectedAddress
+            const web3 = new Web3(
+              new Web3.providers.HttpProvider(networkURL.networkURL))
+            var userManagerContract = new web3.eth.Contract(
+              userManagerABI, userManagerReceipt.contractAddress, {
+                from: address
+              }
+            )
+            userManagerContract.methods.grantAuthorship(author.publicKey).send({
+                from: address,
+                gasPrice: 1,
+                gas: 200000
+            }).on('receipt', (receipt) => {
+                console.log(receipt)
+                axios.post(serverSide.registerAuthor,
+                {
+                    authorID: author.id,
+                    publisherID: this.publisher._id
+                }).then( res => {
+                    console.log(res.data.publisher)
+                    this.$router.go()
+                })
+            }).on(('error'), (err) => {
+                console.log(err)
             })
         }
     },

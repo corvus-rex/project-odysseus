@@ -90,7 +90,11 @@ import Nav from '../components/Nav'
 import appName from '../appName'
 import serverSide from '../serverSide'
 import axios from 'axios'
-import {publishDraft} from '../contracts/callContract'
+
+import Web3 from 'web3'
+import networkURL from '../../../contracts/networkURL.js'
+import newsroomManagerABI  from "../../../contracts/ABI/abi_newsroommanager.json"
+import newsroomManagerReceipt from '../../../contracts/receipts/receipt_newsroommanager.json'
 
 export default {
     name: 'Newsroom',
@@ -105,6 +109,7 @@ export default {
             publishedList: [],
             draftList: [],
             selectedPublication: null,
+            hashedTitle: sha256.create(),
             hashedDraft: sha256.create()
         }
     },
@@ -190,14 +195,20 @@ export default {
         },
         confirmModal(draft) {
             this.selectedPublication = draft
-            var toBeHashed = this.selectedPublication
-            delete toBeHashed.revised
-            delete toBeHashed.status
+            var selected = this.selectedPublication
+            var {title, article, description,
+            publisher, tags, locations, ...partialObject} = selected
+            var toBeHashed = {title, article, description, 
+            publisher, tags, locations}
+            console.log("Partial Object: ", partialObject)
+            console.log("To-be Hashed: ", toBeHashed)
             var stringifiedPublication = JSON.stringify(toBeHashed)
             this.hashedDraft.update(stringifiedPublication)
+            this.hashedTitle.update(this.selectedPublication.title)
             this.$bvModal.show('confirm-publish')
             console.log(stringifiedPublication)
             console.log(this.hashedDraft.hex())
+            console.log(this.hashedTitle.hex())
         },
         publishDraft() {
             console.log(this.selectedPublication)
@@ -213,14 +224,36 @@ export default {
                 authorsKey.push(authors[i].publicKey)
             }
             var address = window.ethereum.selectedAddress
-            publishDraft(authorsKey, this.selectedPublication._id, this.hashedDraft.hex(), address)
-            axios.post(serverSide.publishDraft, {
-                draft: this.selectedPublication,
-                approver: this.user._id
-            })
-            .then((res) => {
-                console.log(res.data.publication)
-                this.$router.go()
+            const web3 = new Web3(
+              new Web3.providers.HttpProvider(networkURL.networkURL))
+            var newsroomManagerContract = new web3.eth.Contract(
+              newsroomManagerABI, newsroomManagerReceipt.contractAddress, {
+                from: address
+              }
+            )
+            newsroomManagerContract.methods.publishDraft(
+                this.hashedTitle.hex(),
+                authorsKey,
+                this.chiefOfficer.publicKey,
+                this.hashedDraft.hex()
+            ).send({
+                from: address,
+                gasPrice: 1,
+                gas: 500000
+            }).on('receipt', receipt => {
+                console.log(receipt.events.NewsPublished.returnValues.newsID)
+                var chainID = receipt.events.NewsPublished.returnValues.newsID
+                axios.post(serverSide.publishDraft, {
+                    draft: this.selectedPublication,
+                    approver: this.user._id,
+                    chainID: chainID
+                })
+                .then((res) => {
+                    console.log(res.data.publication)
+                    this.$router.go()
+                })
+            }).on('error', err => {
+                console.log(err)
             })
         }
     },

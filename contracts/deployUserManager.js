@@ -1,9 +1,9 @@
 var solc = require("solc"); // import the solidity compiler
 var fs = require("fs");
 var Web3 = require('web3')
-var networkURL = require('../networkURL')
+var networkURL = require('./networkURL')
 
-var code = fs.readFileSync("publication.sol").toString();
+var code = fs.readFileSync("UserManager.sol").toString();
 
 var solcInput = {
     language: "Solidity",
@@ -38,18 +38,18 @@ var solcInput = {
 
 var output = JSON.parse(solc.compile(JSON.stringify(solcInput)));
 
-var abi = output.contracts.contract.Publication.abi;
-fs.writeFileSync('abi_publication.json', JSON.stringify(abi, null, "\t"));
+var abi = output.contracts.contract.UserManager.abi;
+fs.writeFileSync('ABI/abi_usermanager.json', JSON.stringify(abi, null, "\t"));
 
-var bytecode = output.contracts.contract.Publication.evm.bytecode;
-fs.writeFileSync('bytecode_publication.json', JSON.stringify(bytecode, null, "\t"));
+var bytecode = output.contracts.contract.UserManager.evm.bytecode;
+fs.writeFileSync('bytecodes/bytecode_usermanager.json', JSON.stringify(bytecode, null, "\t"));
 
 const web3 = new Web3(new Web3.providers.HttpProvider(networkURL.networkURL))
 web3.eth.getAccounts().then( (accounts) => {
   var account = accounts[0]
-  var publicationContract = new web3.eth.Contract(abi);
+  var userManagerContract = new web3.eth.Contract(abi);
   var bc = bytecode.object;
-  var publication = publicationContract.deploy({
+  var userManager = userManagerContract.deploy({
       data: bc, 
       arguments: [
       ]
@@ -61,6 +61,6 @@ web3.eth.getAccounts().then( (accounts) => {
   .on('transactionHash', function(transactionHash){ console.log(transactionHash) })
   .on('receipt', function(receipt){
     console.log(receipt)
-    fs.writeFileSync('receipt_publication.json', JSON.stringify(receipt, null, "\t"));
+    fs.writeFileSync('receipts/receipt_usermanager.json', JSON.stringify(receipt, null, "\t"));
   })
 });
