@@ -1,3 +1,3 @@
-const networkURL = "http://localhost:7545/";
-const websocketURL = "ws://localhost:7545/";
+const networkURL = "http://localhost:8545/";
+const websocketURL = "ws://localhost:8545/";
 module.exports = {networkURL, websocketURL};

@@ -417,13 +417,12 @@ contract NewsroomManager {
         for(uint i = 0; i < _authors.length; i++) {
             userManager.incrementUserRep(_authors[i], 1); // increase authors rep score by 1
         }
-        currentNews += 1;
         flags[_flagID].status = 1;
         flags[_flagID].counterFlagger = msg.sender;
         stakes[_flagID] += msg.value;
         flags[_flagID].flagger.transfer(stakes[_flagID]);
         emit FlagAccepted(
-            _newsID, 
+            currentNews, 
             _flagID, 
             _newsID, 
             _publisher, 
@@ -433,6 +432,7 @@ contract NewsroomManager {
             _contentHash, 
             "A flag has been accepted");
         stakes[_flagID] = 0;
+        currentNews += 1;
         return currentNews;
     }
 

@@ -209,6 +209,7 @@ export default {
             console.log(stringifiedPublication)
             console.log(this.hashedDraft.hex())
             console.log(this.hashedTitle.hex())
+            console.log(this.chiefOfficer.publicKey)
         },
         publishDraft() {
             console.log(this.selectedPublication)
@@ -223,6 +224,8 @@ export default {
             for (var i = 0; i < authors.length; i++) {
                 authorsKey.push(authors[i].publicKey)
             }
+            console.log("AuthorsKey: ")
+            console.log(authorsKey)
             var address = window.ethereum.selectedAddress
             const web3 = new Web3(
               new Web3.providers.HttpProvider(networkURL.networkURL))
